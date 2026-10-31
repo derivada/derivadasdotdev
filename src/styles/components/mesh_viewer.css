@@ -1,0 +1,98 @@
+.mesh-viewer-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3lh;
+	inline-size: var(--mv-width, 22ch);
+}
+
+.mesh-viewer {
+	block-size: var(--mv-height, 14lh);
+	inline-size: 100%;
+	cursor: grab;
+	touch-action: none;
+}
+
+.mesh-viewer:active {
+	cursor: grabbing;
+}
+
+.mesh-viewer canvas {
+	display: block;
+	outline: none;
+}
+
+.mesh-viewer-caption {
+	color: var(--muted);
+	font-size: 0.8em;
+	text-align: center;
+	line-height: 1.3;
+}
+
+/* Results grid: 1 label column + 6 columns (Template + 5 methods) */
+.mesh-grid {
+	display: grid;
+	grid-template-columns: 6ch repeat(6, 15ch);
+	gap: 0.5lh 1.5ch;
+	align-items: end;
+	margin-block: 1lh;
+	overflow-x: auto;
+	padding-bottom: 0.5lh;
+}
+
+.mesh-grid-header,
+.mesh-grid-row-label {
+	color: var(--muted);
+	font-size: 0.85em;
+	text-align: center;
+}
+
+.mesh-grid-row-label {
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	text-align: center;
+}
+
+.mesh-grid .mesh-viewer-wrap {
+	inline-size: 100%;
+}
+
+.mesh-grid .mesh-viewer {
+	block-size: 17lh;
+}
+
+.mesh-grid-unavailable {
+	block-size: 17lh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px dashed var(--border);
+}
+
+.generated-shapes-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2ch;
+	margin-block: 1lh;
+}
+
+@media (max-width: 900px) {
+	.mesh-grid {
+		grid-template-columns: 5ch repeat(6, minmax(13ch, 1fr));
+	}
+}
+
+@media (max-width: 768px) {
+	.mesh-grid {
+		grid-template-columns: 4ch repeat(6, minmax(11ch, 1fr));
+		gap: 0.5lh 0.75ch;
+	}
+
+	.mesh-grid .mesh-viewer,
+	.mesh-grid-unavailable {
+		block-size: 12lh;
+	}
+
+	.generated-shapes-row .mesh-viewer-wrap {
+		inline-size: 100%;
+	}
+}

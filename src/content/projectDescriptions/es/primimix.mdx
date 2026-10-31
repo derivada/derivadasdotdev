@@ -1,0 +1,37 @@
+---
+id: "primimix"
+---
+
+_Primimix_ es un pipeline híbrido de descomposición y renderizado de escenas desarrollado junto a <a href="https://www.linkedin.com/in/binyu-fang/" target="_blank">Binyu Fang</a>, <a href="https://www.linkedin.com/in/katy-grossmann-2274a71bb/" target="_blank">Katy Grossmann</a>, <a href="https://www.linkedin.com/in/billy-herrmann-020386268/" target="_blank">Billy Herrmann</a>, <a href="https://www.linkedin.com/in/danit-niwattananan-50b4321a6/" target="_blank">Danit Niwattananan</a> para nuestro proyecto del <a href="https://www.mdsi.tum.de/en/di-lab/tum-di-lab/" target="_blank"> TUM Data Innovation Lab </a>, originalmente titulado _Semantic Planar Splatting for 3D Structured Reconstruction_ y supervisado por el Prof. Dr. Olaf Wysocki de la CV4DT Chair de la Universidad de Cambridge. El problema que abordamos es que el 3D Gaussian Splatting renderiza escenas de interiores con gran precisión, pero solo obtiene una nube desestructurada de millones de kernels. Aunque ya existen varios trabajos en la literatura que intentan regularizar este proceso, o que representan la escena con primitivas alternativas (e.g. 2DGS, MeshSplatting, GaMeS...), todavía no hay una representación que sea fotorrealista, geométricamente precisa y estructurada a la vez. Nuestro enfoque combina una representación de doble primitiva, usando planos y superquadrics, optimizados conjuntamente con 2D Gaussians colocadas sobre ellas. De esta forma, las primitivas proporcionan la estructura básica tanto para los objetos en primer plano (superquadrics) como para las regiones planas de fondo (planos), y las Gaussians, equipadas con coeficientes de Spherical Harmonics, añaden textura y detalle geométrico a la representación.
+
+<img
+  src="/images/projects/primimix/primimix_pipeline.png"
+  alt="Pipeline de Primimix: densificación de nube con MoGe, segmentación 3D por instancias, inicialización de primitivas y Gaussian skinning, optimización en dos fases"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+Partiendo únicamente de imágenes y poses, densificamos una nube de puntos, la segmentamos en instancias, y las dividimos en dos conjuntos de primitivas: planos acotados $\mathcal{P}$ para las superficies estructurales, y superquadrics $\mathcal{Q}$ para muebles y objetos, que juntos forman $\mathcal{S} = \mathcal{P} \cup \mathcal{Q}$. Los superquadrics son una familia paramétrica de once parámetros que cubre cuboides, cilindros y elipsoides, definida por los radios $r_i=(r_i^x, r_i^y, r_i^z)$ y los exponentes de forma $\varepsilon_i=(\varepsilon_i^1, \varepsilon_i^2)$.
+
+<img
+  src="/images/projects/primimix/primimix_parametrization.png"
+  alt="Parametrización geométrica del primitivo planar P_i y del primitivo superquadric Q_i"
+  style="width: 62ch; margin-block: 1lh;"
+/>
+
+Después adherimos 2D Gaussians a cada primitiva de $\mathcal{S}$, optimizando primero la geometría contra profundidad y normales, y congelándola después para refinar la apariencia. En una escena representativa de ScanNet++, esto permite que Primimix explique la habitación con unos _620 bloques explícitos_ y _1.6M_ de Gaussians de superficie, frente a los _1.4-2.2M_ de Gaussians completamente desestructuradas que otros métodos de splatting necesitan para renderizar la misma habitación sin ninguna estructura explícita:
+
+<img
+  src="/images/projects/primimix/primimix_representation.png"
+  alt="Estructura de la representación: la descomposición y el render de Primimix junto a la nube de puntos desestructurada de 3D Gaussian Splatting para la misma escena"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+En el aspecto geométrico, Primimix supera a ambos métodos de referencia en distancia de Chamfer, completitud y F-score en el dataset de ScanNet++:
+
+| Método                  | Chamfer↓  | Precisión↓ | Completitud↓ | F@5↑      |
+| ------------------------ | --------- | ---------- | -------------- | --------- |
+| PlanarSplatting          | 10.99     | 9.58       | 12.41          | 44.70     |
+| 3D Gaussian Flats        | 18.60     | **4.60**   | 32.59          | 50.24     |
+| **Primimix (Ours)**   | **6.63**  | 7.00       | **6.26**       | **62.80** |
+
+El proyecto fue calificado con un 1.0 en el TUM DI-Lab (máxima nota), y ahora estamos refinando el método y trabajando hacia una publicación.

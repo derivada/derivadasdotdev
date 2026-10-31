@@ -1,0 +1,202 @@
+---
+interface Props {
+    blockSize?: number | string;
+    width?: number | string;
+}
+
+const { blockSize = 4, width = blockSize } = Astro.props;
+
+function normalizeUnit(value: number | string, unit: 'lh' | 'ch', fallback: number) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return `${value}${unit}`;
+    }
+
+    const parsed = Number.parseFloat(String(value));
+    return Number.isFinite(parsed) ? `${parsed}${unit}` : `${fallback}${unit}`;
+}
+
+const resolvedBlockSize = normalizeUnit(blockSize, 'lh', 4);
+const resolvedWidth = normalizeUnit(width, 'ch', 4);
+
+import "../styles/components/threed_letter.css"
+---
+
+<div
+    class="ddx-canvas-container"
+    data-ddx-logo
+    style={`--ddx-block-size: ${resolvedBlockSize}; --ddx-width: ${resolvedWidth};`}
+    aria-hidden="true"
+></div>
+
+
+
+<script>
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+    import { buildDdxLayout } from '../lib/ddx-logo';
+
+    const GLOBAL_KEY = '__ddxLogoState';
+
+    function getThemeAccentColor() {
+        return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4ec9b0';
+    }
+
+    function applyAccentToMaterials(state) {
+        const accent = new THREE.Color(getThemeAccentColor());
+        const emissiveBase = accent.clone().multiplyScalar(0.18);
+
+        state.blockMaterials.forEach((material) => {
+            const shift = material.userData.lightnessShift ?? 0;
+            const tone = accent.clone().offsetHSL(0, 0, shift);
+            material.color.copy(tone);
+            material.emissive.copy(emissiveBase);
+        });
+    }
+
+    function createLogoState() {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(80, 80);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Enhanced Lighting for better extrusion shadows
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+        dirLight.position.set(20, 30, 40);
+        scene.add(dirLight);
+
+        // 1. EXTENSION: Increased Z-depth (from 0.5 to 2.0)
+        // Ratio: JetBrains Mono width (1), Height (1.6), Depth (2.0)
+        const geometry = new THREE.BoxGeometry(1, 1.6, 2.0);
+
+        // Build one base material and clone it per block.
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0x4ec9b0,
+            emissive: 0x0d2c26,
+            roughness: 0.1,         // Shiny surfaces
+            metalness: 0.4,
+            clearcoat: 1.0,         // Added "car paint" layer for extra highlights
+            clearcoatRoughness: 0.1,
+            transmission: 0.2,       // Slight light passing through
+        });
+
+        const layout = buildDdxLayout();
+        const group = new THREE.Group();
+        const blockMaterials = [];
+        const offsetX = 21;
+        const offsetY = 21 * 1.6;
+
+        layout.forEach((row, y) => {
+            for (let x = 0; x < row.length; x += 1) {
+                if (row[x] !== '1') continue;
+                
+				// Keep per-row variation but drive base tone from active theme accent.
+                const blockMaterial = material.clone();
+				blockMaterial.userData.lightnessShift = (y / layout.length) * 0.18;
+				blockMaterials.push(blockMaterial);
+
+                const mesh = new THREE.Mesh(geometry, blockMaterial);
+                mesh.position.set(x - offsetX, -y * 1.6 + offsetY, 0);
+                group.add(mesh);
+            }
+        });
+
+        scene.add(group);
+
+        // Move camera slightly off-center to emphasize the new extrusion depth
+        camera.position.set(25, 10, 75);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enableZoom = false;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 2.5; // Spun it back up to show off the depth
+
+        const state = {
+            scene,
+            camera,
+            renderer,
+            controls,
+            blockMaterials,
+            container: null,
+            currentHost: null,
+            rafId: 0,
+        };
+
+		applyAccentToMaterials(state);
+
+		const themeObserver = new MutationObserver(() => {
+			applyAccentToMaterials(state);
+		});
+		themeObserver.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ['data-theme'],
+		});
+
+        const onResize = () => {
+            const host = state.currentHost;
+            if (!(host instanceof HTMLElement)) return;
+            const width = Math.max(1, host.clientWidth);
+            const height = Math.max(1, host.clientHeight);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+            renderer.setSize(width, height);
+        };
+        window.addEventListener('resize', onResize);
+
+        const render = () => {
+            state.rafId = requestAnimationFrame(render);
+            controls.update();
+            renderer.render(scene, camera);
+        };
+        render();
+
+        state.dispose = () => {
+            cancelAnimationFrame(state.rafId);
+            window.removeEventListener('resize', onResize);
+            themeObserver.disconnect();
+            controls.dispose();
+            renderer.dispose();
+            geometry.dispose();
+            material.dispose();
+        };
+
+        return state;
+    }
+
+    function getLogoState() {
+        if (!window[GLOBAL_KEY]) {
+            window[GLOBAL_KEY] = createLogoState();
+        }
+        return window[GLOBAL_KEY];
+    }
+
+    function attachLogo(container) {
+        const state = getLogoState();
+        if (state.currentHost === container) return;
+
+        state.currentHost = container;
+        state.container = container;
+        if (!container.contains(state.renderer.domElement)) {
+            container.appendChild(state.renderer.domElement);
+        }
+
+        const { clientWidth, clientHeight } = container;
+        state.camera.aspect = clientWidth / clientHeight;
+        state.camera.updateProjectionMatrix();
+        state.renderer.setSize(clientWidth, clientHeight);
+        state.renderer.setPixelRatio(window.devicePixelRatio);
+    }
+
+    function mountLogos() {
+        document.querySelectorAll('[data-ddx-logo]').forEach((container) => {
+            attachLogo(container);
+        });
+    }
+
+    mountLogos();
+    document.addEventListener('astro:page-load', mountLogos);
+    document.addEventListener('astro:after-swap', mountLogos);
+</script>

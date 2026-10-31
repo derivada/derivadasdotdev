@@ -1,0 +1,32 @@
+---
+interface Props {
+	href?: string;
+	label: string;
+	theme?: 'default' | 'catppuccin_mocha' | 'solarized_light' | 'vscode';
+	disabled?: boolean;
+}
+
+const { href, label, theme, disabled = false } = Astro.props;
+---
+
+{href ? (
+	<a
+		href={disabled ? undefined : href}
+		role="button"
+		data-theme={theme}
+		class:list={['nav-button', disabled && 'nav-current']}
+		aria-disabled={disabled ? 'true' : undefined}
+		tabindex={disabled ? -1 : undefined}
+	>
+		{label}
+	</a>
+) : (
+	<button
+		type="button"
+		data-theme={theme}
+		disabled={disabled}
+		class:list={['nav-button', disabled && 'nav-current']}
+	>
+		{label}
+	</button>
+)}

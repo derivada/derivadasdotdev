@@ -1,0 +1,9 @@
+---
+id: "octrees-thesis"
+---
+
+Para mi TFG de Ingeniería Informática, desarrollé algoritmos rápidos para consultas espaciales en nubes de puntos 3D $\mathcal{P} \subset \mathbb{R}^3$. El problema que abarqué es sencillo: dado un centro $p \in \mathcal{P}$, o bien buscamos todos los puntos a menos de una distancia dada $r > 0$ (_fixed-radius queries_), o bien buscamos los $k$ puntos más cercanos (_kNN queries_) de la nube. Estas dos operaciones de búsqueda de vecindad son extremadamente comunes, y suelen convertirse en un cuello de botella computacional en el procesado de nubes grandes para teledetección y fotogrametría. Para resolver este problema, desarrollamos dos enfoques para acelerar las búsquedas:
+- Reordenación de la nube de puntos mediante Space Filling Curves (SFCs), alterando el orden en memoria para reducir fallos de caché y _mejorar el rendimiento hasta un 75%_.
+- Una estructura de datos en forma de octree linear, equipada con un algoritmo novedoso para recuperación rápida de puntos en búsquedas de radio fijo, y una adaptación a esta estructura de un algoritmo conocido para búsquedas kNN. Ambos algoritmos destacan en rendimiento y superan incluso bibliotecas SoTA en términos de velocidad de las búsquedas (_hasta 10x más rápido_, mejor escalabilidad en $r$ y $k$), uso de memoria (_70% menos_, layout compacto) y tiempo de construcción (paralelizable, _hasta 30x más rápida_).
+
+El trabajo _obtuvo la nota máxima_ (10/10) y fue reconocido con _Matrícula de Honor_ como uno de los mejores de la promoción. Tras mi graduación, mis tutores y yo seguimos trabajando en el proyecto y lo ampliamos primero a un artículo corto para las <a href="https://jornadassarteco.org/?anyo=2025" target="_blank">Jornadas SARTECO 2025</a>. Más adelante, redactamos un artículo completo, ya enviado y disponible como preprint en arXiv. <a href="/es/projects/research-octree-neighbourhood">Consulta la entrada del proyecto de investigación para más información!</a>.

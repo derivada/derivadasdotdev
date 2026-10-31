@@ -1,0 +1,43 @@
+---
+import { type CollectionEntry, render } from 'astro:content';
+import MainLayout from '../../layouts/MainLayout.astro';
+import { getPostsByLocale, getPostByLocaleAndSlug, getPostByTranslationKey } from '../../lib/blog';
+import SiteHeader from '../../components/SiteHeader.astro';
+
+export async function getStaticPaths() {
+	const posts = await getPostsByLocale('en');
+	return posts.map((post) => ({
+		params: { slug: post.data.urlSlug },
+		props: { post },
+	}));
+}
+
+interface Props {
+	post: CollectionEntry<'blog'>;
+}
+
+const { post } = Astro.props;
+const resolvedPost = (await getPostByLocaleAndSlug('en', post.data.urlSlug)) ?? post;
+const esPost = await getPostByTranslationKey('es', resolvedPost.data.translationKey);
+const languageLinks = {
+	en: `/blog/${resolvedPost.data.urlSlug}`,
+	es: esPost ? `/es/blog/${esPost.data.urlSlug}` : '/es/blog',
+};
+const { Content } = await render(resolvedPost);
+---
+
+<MainLayout
+	title={`${resolvedPost.data.title} | Blog`}
+	description={resolvedPost.data.description}
+>
+	<SiteHeader locale="en" activeTab="blog" languageLinks={languageLinks} />
+
+	<section class="panel post-header">
+		<h2 class="panel-title-tight">{resolvedPost.data.title}</h2>
+		<p class="muted post-date">{resolvedPost.data.pubDate.toLocaleDateString()}</p>
+	</section>
+
+	<article class="panel blog-content">
+		<Content />
+	</article>
+</MainLayout>

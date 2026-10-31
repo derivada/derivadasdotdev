@@ -1,0 +1,40 @@
+---
+import { render } from 'astro:content';
+import MainLayout from '../../../layouts/MainLayout.astro';
+import { getPostByLocaleAndSlug, getPostsByLocale, getPostByTranslationKey } from '../../../lib/blog';
+import SiteHeader from '../../../components/SiteHeader.astro';
+
+export async function getStaticPaths() {
+	const posts = await getPostsByLocale('es');
+	return posts.map((post) => ({
+		params: { slug: post.data.urlSlug },
+	}));
+}
+
+const { slug } = Astro.params;
+const post = await getPostByLocaleAndSlug('es', slug ?? '');
+
+if (!post) {
+	throw new Error(`Missing Spanish post for slug: ${slug}`);
+}
+
+const { Content } = await render(post);
+const enPost = await getPostByTranslationKey('en', post.data.translationKey);
+const languageLinks = {
+	en: enPost ? `/blog/${enPost.data.urlSlug}` : '/blog',
+	es: `/es/blog/${post.data.urlSlug}`,
+};
+---
+
+<MainLayout title={`${post.data.title} | Blog`} description={post.data.description}>
+	<SiteHeader locale="es" activeTab="blog" languageLinks={languageLinks} />
+
+	<section class="panel post-header">
+		<h2 class="panel-title-tight">{post.data.title}</h2>
+		<p class="muted post-date">{post.data.pubDate.toLocaleDateString()}</p>
+	</section>
+
+	<article class="panel blog-content">
+		<Content />
+	</article>
+</MainLayout>

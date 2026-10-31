@@ -1,0 +1,484 @@
+@layer base, utils, components;
+
+@import '@fontsource-variable/jetbrains-mono';
+@import '@webtui/css';
+@import 'katex/dist/katex.min.css';
+@import '@webtui/plugin-nf';
+@import './themes.css';
+@import '@webtui/css/components/popover.css';
+
+@layer base {
+	:root {
+		--font-family:
+			'JetBrains Mono Variable', 'JetBrains Mono', 'JetBrainsMono Nerd Font', Menlo, Monaco, monospace,
+			'Symbols Nerd Font', 'Symbols Nerd Font Mono';
+		--space-1: 1lh;
+		--space-2: 2lh;
+		--space-3: 3lh;
+		--space-ch-1: 1ch;
+		--space-ch-2: 2ch;
+		--space-ch-3: 3ch;
+	}
+}
+
+html,
+body {
+	min-height: 100%;
+	font-family: var(--font-family);
+	background: radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 20%, var(--bg) 80%) 0, var(--bg) 55%);
+	color: var(--text);
+}
+
+body {
+	min-height: 100dvh;
+}
+
+/* WebTUI's base reset sets word-break: break-all on body/html for tight grid/table
+   layouts, which mangles regular prose by breaking mid-word. Restore normal word
+   wrapping for actual text content, keeping overflow-wrap as a safety net for
+   genuinely unbreakable long tokens (URLs, identifiers). */
+p,
+li,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+td,
+th {
+	word-break: normal;
+	overflow-wrap: break-word;
+}
+
+/* WebTUI's base.css ships an unlayered-effective `* { padding: 0 }` reset
+   that ends up beating its own @layer components button padding rule (a
+   layer-merging quirk between the import and this file's declared layer
+   order) -- production builds reproduce this even though dev mode doesn't.
+   Restore it here in an unlayered rule, which always wins over any
+   @layer-wrapped rule regardless of specificity or declared layer order,
+   so this can't be silently defeated the same way again. Mirrors WebTUI's
+   own selector list and size-="small" variant. */
+button,
+input[type='button'],
+input[type='submit'],
+input[type='reset'],
+[is-~='button'] {
+	padding: 0 2ch;
+}
+
+button[size-='small'],
+input[type='button'][size-='small'],
+input[type='submit'][size-='small'],
+input[type='reset'][size-='small'],
+[is-~='button'][size-='small'] {
+	padding: 0 1ch;
+}
+
+/* WebTUI's typography component hardcodes `p strong, li strong` to its own
+   --foreground0 variable, which this site's theme system never sets (so it
+   stays at the library default, pure black) — invisible on a dark background.
+   Route bold prose text through the site's own --text token instead. */
+p strong,
+li strong {
+	color: var(--text);
+}
+
+a {
+	color: var(--accent);
+}
+
+em {
+	font-style: normal;
+	color: var(--accent);
+}
+
+p,
+li,
+span:not([is-="badge"]) {
+	color: var(--muted);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin: 0;
+	font-weight: 700;
+	color: var(--text);
+}
+
+/* Main frame */
+
+.main {
+	width: 100%;
+	min-height: 100dvh;
+	margin: 0;
+	padding: var(--space-1) var(--space-ch-3);
+	border: 1px solid var(--border);
+	background-color: var(--bg);
+	box-shadow: none;
+	border-radius: 0;
+	position: relative;
+	overflow: hidden;
+}
+
+
+
+/* Panels and content blocks */
+
+.panel {
+	position: relative;
+    border-style: solid;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--bg);
+    border-color: var(--border);
+    border-block-width: 0.05lh;
+    border-inline-width: 0.1ch;
+    padding-block: 0.95lh;
+    padding-inline: 0.9ch;
+    border-radius: 0;
+
+	/* background: transparent; */
+}
+
+.panel+.panel {
+	margin-top: 1lh;
+}
+
+.panel-title {
+	position: absolute;
+	top: 0;
+	left: 1ch;
+	transform: translateY(-50%);
+	margin: 0;
+	padding: 0 1ch;
+	background: color-mix(in oklab, var(--panel) 92%, black 8%);
+	line-height: 1;
+	font-weight: 700;
+}
+
+.panel-title-tight {
+	margin: 0 0 1lh;
+}
+
+.social-links {
+    display: flex;
+    gap: 1ch; 
+}
+
+.social-icon {    
+    line-height: 1lh; 
+    width: 2ch;
+    text-align: start;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Example hover effect */
+.social-icon:hover {
+    color: var(--accent);
+}
+
+
+
+.content-list {
+	margin: 0;
+	padding-left: 2ch;
+}
+
+.content-list li+li {
+	margin-top: 1lh;
+}
+
+.post-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.post-item {
+	margin: 0;
+	padding-block: 1lh;
+	border-bottom: 1px dotted color-mix(in oklab, var(--border) 75%, transparent 25%);
+}
+
+.post-item:last-child {
+	border-bottom: 0;
+	padding-bottom: 0;
+}
+
+.post-header {
+	margin-bottom: var(--space-2);
+}
+
+.post-date {
+	margin: 0;
+}
+
+.pub-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 1lh;
+}
+
+
+.pub-list>.pub-card::before {
+	content: none;
+}
+
+.pub-top {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+}
+
+.pub-badge {
+	color: var(--panel);
+}
+
+/* WebTUI badge color overrides per venue */
+.pub-badge-arxiv {
+	--badge-color: color-mix(in oklab, var(--bright-red) 90%, white 10%);
+}
+
+.pub-badge-arxiv:hover {
+	--badge-color: var(--panel);
+	--badge-text: color-mix(in oklab, var(--bright-red) 90%, white 10%);
+}
+
+.pub-title {
+	margin: 0;
+	font-weight: 600;
+}
+
+.pub-badge-link:hover .pub-badge,
+.pub-badge-link:focus-visible .pub-badge {
+	transform: translateY(-0.05lh);
+	filter: brightness(1.12) saturate(1.08);
+	color: color-mix(in oklab, var(--badge-text) 70%, white 30%);
+}
+
+.pub-badge-link:focus-visible {
+	outline: none;
+}
+
+
+.blog-content {
+	margin-top: var(--space-2);
+	padding-top: var(--space-2);
+	border-top: 1px solid var(--border);
+}
+
+.footnotes {
+	margin-top: 1lh;
+	padding-top: 1lh;
+	border-top: 1px dotted color-mix(in oklab, var(--border) 80%, transparent 20%);
+}
+
+.footnotes ol {
+	margin: 0;
+	padding-left: 2ch;
+}
+
+.footnotes li + li {
+	margin-top: 0.75lh;
+}
+
+.footnotes p {
+	margin: 0;
+}
+
+.footnotes img {
+	display: block;
+	max-width: min(100%, 52ch);
+	height: auto;
+	margin-top: 0.5lh;
+	border: 1px solid var(--border);
+}
+
+a.footnote-backref {
+	text-decoration: none;
+	margin-left: 0.5ch;
+}
+
+/* Keep KaTeX aligned to the monospace baseline grid. */
+.katex {
+	font-size: 1em;
+	line-height: 1lh;
+	vertical-align: 0.08em; /* kinda arbitrary */
+}
+
+.katex-display {
+	margin: 1lh 0;
+}
+
+.katex-display > .katex {
+	font-size: 1em;
+	vertical-align: 0;
+}
+
+/* Achievements */
+
+.achievement-year-group {
+	margin-top: 1lh;
+	padding-bottom: 1lh;
+	background-color: var(--panel);
+}
+
+.achievement-year-badge {
+	--badge-color: var(--normal-black);
+	color: var(--badge-text);
+}
+
+.achievement-list {
+	padding-left: 2ch;
+	color: color-mix(in oklab, var(--muted) 85%, var(--text) 15%);
+}
+
+.achievement-list li::marker {
+	color: color-mix(in oklab, var(--accent) 70%, var(--muted) 30%);
+}
+
+/* News: filled badge, distinct from the outline-on-black achievement year
+   badges. */
+.news-date-badge {
+	--badge-color: var(--bright-green);
+	color: var(--normal-black);
+}
+
+/* Match the project-group colors used in the projects sidebar (see
+   projectGroups in src/lib/projects.ts). */
+.news-group-research {
+	color: var(--normal-magenta);
+}
+
+.news-group-robotics {
+	color: var(--normal-green);
+}
+
+@media (max-width: 640px) {
+	.shell {
+		padding: var(--space-2) var(--space-ch-1);
+	}
+
+	.theme-select {
+		max-width: 16ch;
+	}
+}
+
+.badge-normal-black {
+	--badge-text: var(--normal-black);
+}
+
+.badge-normal-red {
+	--badge-text: var(--normal-red);
+}
+
+.badge-normal-green {
+	--badge-text: var(--normal-green);
+}
+
+.badge-normal-yellow {
+	--badge-text: var(--normal-yellow);
+}
+
+.badge-normal-blue {
+	--badge-text: var(--normal-blue);
+}
+
+.badge-normal-magenta {
+	--badge-text: var(--normal-magenta);
+}
+
+.badge-normal-cyan {
+	--badge-text: var(--normal-cyan);
+}
+
+.badge-normal-white {
+	--badge-text: var(--normal-white);
+}
+
+.badge-bright-black {
+	--badge-text: var(--bright-black);
+}
+
+.badge-bright-red {
+	--badge-text: var(--bright-red);
+}
+
+.badge-bright-green {
+	--badge-text: var(--bright-green);
+}
+
+.badge-bright-yellow {
+	--badge-text: var(--bright-yellow);
+}
+
+.badge-bright-blue {
+	--badge-text: var(--bright-blue);
+}
+
+.badge-bright-magenta {
+	--badge-text: var(--bright-magenta);
+}
+
+.badge-bright-cyan {
+	--badge-text: var(--bright-cyan);
+}
+
+.badge-bright-white {
+	--badge-text: var(--bright-white);
+}
+
+.info-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 16ch;
+	gap: 2ch;
+	align-items: start;
+}
+
+@media (max-width: 640px) {
+	.info-layout {
+		grid-template-columns: 1fr;
+		gap: 2lh;
+	}
+	.photo-placeholder {
+		margin-top: 2lh;
+		justify-self: start;
+	}
+}
+
+.photo-placeholder {
+	margin: 0;
+}
+
+.photo-placeholder-inner {
+	border: 1px dashed var(--border);
+	background: var(--panel);
+	padding: 0.5lh 1ch;
+	margin: 0;
+}
+
+.profile-photo {
+	padding: 0;
+	margin: 0;
+	max-width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+	.shell {
+		padding: var(--space-2) var(--space-ch-1);
+	}
+
+	.theme-select {
+		max-width: 16ch;
+	}
+}

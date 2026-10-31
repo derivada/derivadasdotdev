@@ -1,0 +1,117 @@
+---
+id: "matching-disconnected"
+---
+
+import MeshViewer from '../../components/MeshViewer.astro';
+import MeshViewToggle from '../../components/MeshViewToggle.astro';
+
+export const faust = { base: '/models/matching-disconnected/faust' };
+export const scape = { base: '/models/matching-disconnected/scape' };
+export const tosca = { base: '/models/matching-disconnected/tosca' };
+export const dt4dAnimals = { base: '/models/matching-disconnected/dt4d_animals' };
+
+export function templateMesh(ds) {
+  return [{ url: `${ds.base}/template.off`, colorsUrl: `${ds.base}/template_colors.bin` }];
+}
+
+export function gtMesh(ds) {
+  return [{
+    url: `${ds.base}/disc_mesh.off`,
+    corresUrl: `${ds.base}/gt_corres.bin`,
+    templateColorsUrl: `${ds.base}/template_colors.bin`,
+  }];
+}
+
+export function methodMesh(ds, method) {
+  return [{
+    url: `${ds.base}/disc_mesh.off`,
+    corresUrl: `${ds.base}/${method}_disc_corres.bin`,
+    templateColorsUrl: `${ds.base}/template_colors.bin`,
+  }];
+}
+
+export function methodMeshFull(ds, method) {
+  return [{
+    url: `${ds.base}/${method}.off`,
+    corresUrl: `${ds.base}/${method}_corres.bin`,
+    templateColorsUrl: `${ds.base}/template_colors.bin`,
+  }];
+}
+
+export function generatedShapesMesh(ds) {
+  return [{ url: `${ds.base}/generated_sample.off`, componentsUrl: `${ds.base}/generated_sample_components.bin` }];
+}
+
+_Shape matching_ is a classical problem in Geometry Processing that aims to find point-to-point correspondences between two 3D surfaces. _Partial_ shape matching does it when one of them is incomplete. Most methods, including the one we build on (ULRSSM), lean on _functional maps_: a shared basis built from the eigenfunctions of each shape's Laplace-Beltrami operator (LBO), which implicitly assumes a single connected surface. If one cuts a shape into several _spatially disconnected_ fragments, the functional map falls apart. Existing benchmarks (e.g. SHREC16, BeCoS) only handle the single connected component. Together with Mehdi Chehaider, we explored what happens under real disconnection, where existing correspondence methods fail almost immediately.
+
+We first built a dataset for this, adapting the BeCoS codebase that uses raycasting for fragmenting shapes over different base benchmarks (e.g. SCAPE, FAUST, DeformingThings4D, TOSCA). Beyond a random-viewpoint baseline, we designed a _non-convexity-driven viewpoint selection_ strategy: it renders depth maps from candidate directions, detects the depth discontinuities that split a silhouette, and samples the views that yield well-balanced disconnected components. This way, we are able to generate hard examples quickly — drag the shapes below to see one test mesh per dataset, with each of its largest disconnected components rendered in its own color and stray sliver fragments greyed out:
+
+<div class="generated-shapes-row">
+  <MeshViewer meshes={generatedShapesMesh(faust)} label="FAUST example, disconnected components colored separately" caption="FAUST — 5 largest components" width={24} height={17} />
+  <MeshViewer meshes={generatedShapesMesh(scape)} label="SCAPE example, disconnected components colored separately" caption="SCAPE — 5 largest components" width={24} height={17} />
+  <MeshViewer meshes={generatedShapesMesh(tosca)} label="TOSCA example, disconnected components colored separately" caption="TOSCA — 5 largest components" width={24} height={17} />
+  <MeshViewer meshes={generatedShapesMesh(dt4dAnimals)} label="DeformingThings4D animal example, disconnected components colored separately" caption="DT4D Animals — 5 largest components" width={24} height={17} />
+</div>
+
+### Reconstruction as a matching prior
+
+Our core idea for actually solving the matching problem is using a _3D generative model_ as a shape prior to reconstruct the full object from its fragments, match against that reconstruction, and then project the correspondence back onto the disconnected mesh:
+
+<img
+  src="/images/projects/matching-disconnected/matching_disconnected_pipeline.png"
+  alt="Mapping through reconstructions: a disconnected mesh M_A is completed into a reconstruction M_recA via nearest-neighbor correspondence, matched against the template M_0 through ULRSSM, and the composed map is compared against the ground-truth correspondence."
+  style="width: 78ch; margin-block: 1lh;"
+/>
+
+We compared four reconstruction approaches, first a baseline geometric _bridging_ method, then point-cloud completion via _PoinTr_ and Poisson Surface Reconstruction, and finally two image-to-3D generative models, _Hunyuan3D_ and _Pixal3D_. We trained ULRSSM on each and measured geodesic error and reconstruction quality. _Hunyuan3D_ came out on top, producing smooth, well-aligned reconstructions that preserved most of the correspondence quality, while bridging turned out to be a surprisingly strong non-learned baseline on human meshes. Our main finding is that matching disconnected shapes is now a tractable problem thanks to recent 3D generative models, and we aim to keep working on this line of research and publish a paper describing the detailed approach soon.
+
+### Results
+
+Every mesh below is colored by transferring the Template's own coordinate-based coloring through its predicted point-to-point correspondence, so a smooth, coherent color means accurate matching and a scrambled color means it broke down. You can choose to show the mapping (via Nearest-Neighbors) to the disconnected mesh, which is what's evaluated, or the full reconstruction, which is what's matched.
+
+<MeshViewToggle labelDefault="Original Mesh" labelAlt="Reconstruction" />
+
+<div class="mesh-grid">
+  <div></div>
+  <div class="mesh-grid-header">Template</div>
+  <div class="mesh-grid-header">GT</div>
+  <div class="mesh-grid-header">Bridging</div>
+  <div class="mesh-grid-header">PoinTr</div>
+  <div class="mesh-grid-header">Hunyuan3D</div>
+  <div class="mesh-grid-header">Pixal3D</div>
+
+  <div class="mesh-grid-row-label">FAUST</div>
+  <MeshViewer meshes={templateMesh(faust)} label="FAUST template shape, colored by its own coordinates" autoRotate={false} />
+  <MeshViewer meshes={gtMesh(faust)} label="FAUST ground-truth correspondence on the disconnected mesh" autoRotate={false} />
+  <MeshViewer meshes={methodMesh(faust, 'bridging')} altMeshes={methodMeshFull(faust, 'bridging')} label="FAUST bridging, predicted correspondence" autoRotate={false} />
+  <MeshViewer meshes={methodMesh(faust, 'pointr')} altMeshes={methodMeshFull(faust, 'pointr')} label="FAUST PoinTr, predicted correspondence" autoRotate={false} />
+  <MeshViewer meshes={methodMesh(faust, 'hunyuan3d')} altMeshes={methodMeshFull(faust, 'hunyuan3d')} label="FAUST Hunyuan3D, predicted correspondence" autoRotate={false} />
+  <MeshViewer meshes={methodMesh(faust, 'pixal3d')} altMeshes={methodMeshFull(faust, 'pixal3d')} label="FAUST Pixal3D, predicted correspondence" autoRotate={false} />
+
+  <div class="mesh-grid-row-label">TOSCA</div>
+  <MeshViewer meshes={templateMesh(tosca)} label="TOSCA template shape, colored by its own coordinates" autoRotate={false} />
+  <MeshViewer meshes={gtMesh(tosca)} label="TOSCA ground-truth correspondence on the disconnected mesh" autoRotate={false} />
+  <div class="mesh-grid-unavailable">n/a</div>
+  <div class="mesh-grid-unavailable">n/a</div>
+  <MeshViewer meshes={methodMesh(tosca, 'hunyuan3d')} altMeshes={methodMeshFull(tosca, 'hunyuan3d')} label="TOSCA Hunyuan3D, predicted correspondence" autoRotate={false} />
+  <MeshViewer meshes={methodMesh(tosca, 'pixal3d')} altMeshes={methodMeshFull(tosca, 'pixal3d')} label="TOSCA Pixal3D, predicted correspondence" autoRotate={false} />
+</div>
+
+The following two tables confirm the visual results. While Hunyuan3D and Pixal3D are mostly tied in terms of reconstruction quality, Hunyuan3D leads in matching quality, which we attribute to a more regular geometry.
+
+**FAUST - reconstruction method metrics**
+
+| Method | CD-L1 (cm)↓ | CD-L2 (cm²)↓ | F1@2cm↑ | F1@5cm↑ |
+| --- | --- | --- | --- | --- |
+| PoinTr | 3.09±1.28 | 27.95±23.31 | 0.58±0.16 | 0.81±0.11 |
+| **Hunyuan3D** | **2.41±1.02** | **15.57±19.15** | **0.63±0.15** | **0.90±0.08** |
+| Pixal3D | 2.56±1.32 | 19.33±30.75 | 0.59±0.14 | 0.90±0.10 |
+
+**FAUST - matching quality metrics**
+
+| Method | Geodesic Error↓ | AOC↑ |
+| --- | --- | --- |
+| Bridging | 0.230±0.128 | 0.276±0.189 |
+| PoinTr | 0.311±0.086 | 0.140±0.136 |
+| **Hunyuan3D** | **0.078±0.097** | **0.561±0.194** |
+| Pixal3D | 0.327±0.228 | 0.246±0.289 |

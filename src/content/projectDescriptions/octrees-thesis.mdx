@@ -1,0 +1,9 @@
+---
+id: "octrees-thesis"
+---
+
+In my Informatics BSc thesis, I developed fast algorithms for spatial queries in 3D point clouds $\mathcal{P} \subset \mathbb{R}^3$. The tasks are quite simple, given a center $p \in \mathcal{P}$, we either find all points within a given distance $r > 0$ (_fixed-radius queries_) or we find the $k$ closest points (_kNN queries_). These two neighbourhood-finding operations are extremely common and often become a computational bottleneck in large cloud processing for remote sensing and photogrammetry. We develop two approaches to make them as fast as possible:
+- Point cloud reordering via Space Filling Curves (SFCs), where we alter the order of the cloud in-memory to reduce cache misses and _improve performance by as much as 75%_.
+- An optimized linear octree data structure with a novel algorithm for fast point retrieval in fixed-radius searches, and an adaptation of a known algorithm for kNN searches to it. Both of these algorithms excel in performance and even beat SoTA libraries in terms of performance (_up to 10x faster_, better scalability on $r$ and $k$), memory usage (_70% less_, compact layout) and construction time (parallel construction, _up to 30x faster_).
+
+The thesis _received the maximum grade_ (10/10) and was recognized with honors _as one of the best BSc Thesis_ in the class. After my graduation, me and my supervisors kept working on this project and we expanded it to a short paper for the <a href="https://jornadassarteco.org/?anyo=2025" target="_blank">SARTECO Parallelism Conference 2025</a> and a full journal paper submitted and available in arXiv. <a href="/projects/research-octree-neighbourhood">Check the research project entry for more details</a>.

@@ -1,0 +1,27 @@
+---
+import MainLayout from '../../../layouts/MainLayout.astro';
+import { getPostsByLocale } from '../../../lib/blog';
+import SiteHeader from '../../../components/SiteHeader.astro';
+
+const posts = await getPostsByLocale('es');
+---
+
+<MainLayout title="blog | derivadas.dev">
+	<SiteHeader locale="es" activeTab="blog" />
+
+	<section class="panel">
+        <h2 class="panel-title">~/blog</h2>
+		{posts.length === 0 ? (
+			<p>Subiré posts acerca de nuevos proyectos (y cualquier otra cosa que encuentre interesante) dentro de poco!</p>
+		) : (
+			<ul class="post-list">
+				{posts.map((post) => (
+					<li class="post-item">
+						<a href={`/es/blog/${post.data.urlSlug}/`}>{post.data.title}</a>
+						<span class="muted"> - {post.data.pubDate.toLocaleDateString()}</span>
+					</li>
+				))}
+			</ul>
+		)}
+	</section>
+</MainLayout>

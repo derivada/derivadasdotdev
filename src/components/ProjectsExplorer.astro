@@ -1,0 +1,376 @@
+---
+import ProjectCard from './ProjectCard.astro';
+import type { Locale } from '../lib/i18n';
+import type { GroupConfig, ProjectItem } from '../lib/projects';
+
+interface Props {
+	locale: Locale;
+	groupConfig: Record<string, GroupConfig>;
+	projectsForRender: Record<string, ProjectItem[]>;
+	defaultProjectId: string;
+	descriptionMap: Record<string, any>;
+}
+
+const { locale, groupConfig, projectsForRender, defaultProjectId, descriptionMap } = Astro.props;
+const categoryLabel = locale === 'es' ? 'Categorias de proyectos' : 'Project categories';
+const defaultGroupKey = Object.entries(projectsForRender).find(([, projects]) =>
+	projects.some((project) => project.id === defaultProjectId),
+)?.[0];
+const basePath = locale === 'es' ? '/es/projects' : '/projects';
+---
+
+<section class="projects-layout">
+	<aside class="projects-tree" aria-label={categoryLabel}>
+		{
+			Object.entries(projectsForRender).map(
+				([groupKey, projects]) => (
+					<div
+						class:list={[
+							'tree-group',
+							groupKey === defaultGroupKey && 'tree-group-active',
+						]}
+						data-group-key={groupKey}
+						style={`--group-color: ${groupConfig[groupKey]?.color ?? 'var(--text)'}`}
+					>
+						<span class="tree-group-title" is-="badge">
+							{groupConfig[groupKey]?.label ?? groupKey}
+						</span>
+						<ul marker-="open tree" class="tree-list">
+							{projects.map((project) => (
+								<li>
+									<a
+										class:list={[
+											'tree-node',
+											project.id ===
+												defaultProjectId &&
+												'tree-node-active',
+										]}
+										href={`${basePath}/${project.id}`}
+										data-project-id={project.id}
+										aria-current={
+											project.id === defaultProjectId
+												? 'page'
+												: undefined
+										}
+									>
+										{project.isNew && (
+											<span class="tree-node-new">NEW</span>
+										)}
+										{project.treeLabel}
+										{project.year && (
+											<span class="tree-node-year">
+												· {project.year}
+											</span>
+										)}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				),
+			)
+		}
+	</aside>
+
+	<div class="projects-results">
+		{
+			Object.values(projectsForRender)
+				.flat()
+				.map((project) => {
+					const Content = descriptionMap[project.id];
+
+					return (
+						<div
+							class="project-entry"
+							data-project-id={project.id}
+							hidden={project.id !== defaultProjectId}
+						>
+							<ProjectCard
+								locale={locale}
+								title={project.title}
+								badges={project.badges}
+								demoBadgeColor={project.demoBadgeColor}
+								buttons={project.buttons}
+							>
+								{Content && <Content />}
+							</ProjectCard>
+						</div>
+					);
+				})
+		}
+	</div>
+</section>
+
+<script>
+	const projectTabsStateKey = '__derivadasProjectTabsInitialized';
+	const projectTabsWindow = window as unknown as Window &
+		Record<string, boolean>;
+
+	const initProjectTabs = () => {
+		const root = document.querySelector('.projects-layout');
+		if (!(root instanceof HTMLElement)) {
+			return;
+		}
+
+		if (root.dataset.projectTabsBound === 'true') {
+			return;
+		}
+		root.dataset.projectTabsBound = 'true';
+
+		const nodes = Array.from(
+			root.querySelectorAll('.tree-node[data-project-id]'),
+		);
+		const projects = root.querySelectorAll(
+			'.project-entry[data-project-id]',
+		);
+		const validProjectIds = new Set(
+			nodes
+				.filter((node): node is HTMLElement => node instanceof HTMLElement)
+				.map((node) => node.dataset.projectId)
+				.filter((projectId): projectId is string => Boolean(projectId)),
+		);
+
+		const activateProject = (
+			selectedProjectId: string,
+		): HTMLElement | null => {
+			let activeNode: HTMLElement | null = null;
+
+			nodes.forEach((n) => {
+				if (!(n instanceof HTMLElement)) {
+					return;
+				}
+				const isActive = n.dataset.projectId === selectedProjectId;
+				n.classList.toggle('tree-node-active', isActive);
+				if (isActive) {
+					activeNode = n;
+					n.setAttribute('aria-current', 'page');
+				} else {
+					n.removeAttribute('aria-current');
+				}
+			});
+
+			projects.forEach((project) => {
+				if (!(project instanceof HTMLElement)) {
+					return;
+				}
+				project.hidden =
+					project.dataset.projectId !== selectedProjectId;
+			});
+
+			const activeGroup = activeNode?.closest('.tree-group') ?? null;
+			root.querySelectorAll('.tree-group').forEach((group) => {
+				group.classList.toggle('tree-group-active', group === activeGroup);
+			});
+
+			return activeNode;
+		};
+
+		const projectFromQuery = new URLSearchParams(window.location.search).get(
+			'project',
+		);
+		const projectFromHash = decodeURIComponent(window.location.hash).replace(
+			'#',
+			'',
+		);
+		const initialProjectId = projectFromQuery || projectFromHash;
+		if (initialProjectId && validProjectIds.has(initialProjectId)) {
+			activateProject(initialProjectId);
+		}
+
+		// Sidebar entries are real <a href="/projects/<id>"> links (real,
+		// shareable, F5-safe URLs — see src/pages/projects/[id].astro) that
+		// we intercept on a plain click to do an instant client-side swap
+		// instead of a full navigation, since every project's content is
+		// already present in the DOM (just hidden) on this page. Modifier
+		// clicks (new tab, etc.) and non-primary buttons are left alone so
+		// the link keeps behaving like a normal link.
+		const activateAndPushState = (selectedProjectId: string): HTMLElement | null => {
+			const activeNode = activateProject(selectedProjectId);
+			const href = activeNode instanceof HTMLAnchorElement ? activeNode.getAttribute('href') : null;
+			if (href && window.location.pathname !== href) {
+				history.pushState({ projectId: selectedProjectId }, '', href);
+			}
+			return activeNode;
+		};
+
+		nodes.forEach((node) => {
+			node.addEventListener('click', (event) => {
+				if (!(node instanceof HTMLAnchorElement)) {
+					return;
+				}
+				if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+					return;
+				}
+
+				const selectedProjectId = node.dataset.projectId;
+				if (!selectedProjectId) {
+					return;
+				}
+				event.preventDefault();
+				activateAndPushState(selectedProjectId);
+			});
+
+			node.addEventListener('keydown', (event) => {
+				if (!(node instanceof HTMLElement)) {
+					return;
+				}
+
+				if (!(event instanceof KeyboardEvent)) {
+					return;
+				}
+
+				if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+					return;
+				}
+
+				event.preventDefault();
+
+				const currentIndex = nodes.indexOf(node);
+				if (currentIndex < 0) {
+					return;
+				}
+
+				const direction = event.key === 'ArrowDown' ? 1 : -1;
+				const nextIndex =
+					(currentIndex + direction + nodes.length) % nodes.length;
+				const nextNode = nodes[nextIndex];
+
+				if (!(nextNode instanceof HTMLElement)) {
+					return;
+				}
+
+				nextNode.focus();
+				const selectedProjectId = nextNode.dataset.projectId;
+				if (!selectedProjectId) {
+					return;
+				}
+				activateAndPushState(selectedProjectId);
+			});
+		});
+
+		window.addEventListener('popstate', () => {
+			const idFromPath = window.location.pathname.replace(/\/$/, '').split('/').pop();
+			if (idFromPath && validProjectIds.has(idFromPath)) {
+				activateProject(idFromPath);
+			}
+		});
+	};
+
+	if (!projectTabsWindow[projectTabsStateKey]) {
+		projectTabsWindow[projectTabsStateKey] = true;
+		document.addEventListener('astro:page-load', initProjectTabs);
+		document.addEventListener('astro:after-swap', initProjectTabs);
+	}
+
+	initProjectTabs();
+</script>
+
+<style>
+	.projects-layout {
+		display: grid;
+		grid-template-columns: minmax(20ch, 24ch) minmax(0, 1fr);
+		gap: 2ch;
+		align-items: start;
+	}
+
+	.projects-tree {
+		position: sticky;
+		top: 1lh;
+		display: grid;
+		gap: 1lh;
+		overflow-x: hidden;
+		padding-right: 1ch;
+	}
+
+	.projects-tree::-webkit-scrollbar {
+		width: 0.9ch;
+	}
+
+	.projects-tree::-webkit-scrollbar-thumb {
+		background: color-mix(in oklab, var(--border) 75%, var(--text) 25%);
+	}
+
+	.tree-node {
+		width: 100%;
+		justify-content: flex-start;
+		cursor: pointer;
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.tree-node[aria-current='page'] {
+		color: var(--text);
+		text-decoration: underline;
+	}
+
+	.tree-node-year {
+		color: var(--border);
+		font-size: 0.85em;
+	}
+
+	.tree-node-new {
+		display: inline-block;
+		margin-right: 0.75ch;
+		padding: 0 0.6ch;
+		background: var(--normal-black);
+		color: var(--normal-white);
+		font-size: 0.75em;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		line-height: 1.5;
+		vertical-align: middle;
+		box-shadow: -1px 1px 0 0 var(--group-color);
+	}
+
+	.tree-group-title {
+		margin: 0;
+		--badge-text: var(--group-color);
+		--badge-color: var(--normal-black);
+		transition: color 0.15s ease;
+	}
+
+	.tree-group-active .tree-group-title {
+		--badge-text: var(--normal-black);
+		--badge-color: var(--group-color);
+	}
+
+	.tree-node-active {
+		--button-primary: var(--foreground1);
+	}
+
+	.projects-results {
+		display: flex;
+		flex-direction: column;
+		gap: 1lh;
+		min-width: 0;
+	}
+
+	.project-entry[hidden] {
+		display: none;
+	}
+
+	@media (max-width: 1100px) {
+		.projects-layout {
+			grid-template-columns: minmax(18ch, 20ch) minmax(0, 1fr);
+			gap: 1ch;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.projects-layout {
+			grid-template-columns: 1fr;
+			gap: 1lh;
+		}
+
+		.projects-tree {
+			position: static;
+			max-height: 35dvh;
+			overflow-y: auto;
+			scrollbar-gutter: stable;
+			padding-right: 0.5ch;
+			border: 1px dashed var(--border);
+			padding-block: 0.5lh;
+			padding-left: 1ch;
+		}
+	}
+</style>

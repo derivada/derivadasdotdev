@@ -1,0 +1,465 @@
+---
+export interface FlatMeshSpec {
+	url: string;
+	color: string; // literal CSS color, or a "--custom-property" name resolved live
+}
+
+export interface CorrespondenceMeshSpec {
+	url: string;
+	corresUrl: string;
+	templateColorsUrl: string;
+}
+
+export interface SelfColoredMeshSpec {
+	url: string;
+	colorsUrl: string; // per-vertex RGB, same order as the mesh's own vertices (no indirection)
+}
+
+export interface IndexedComponentMeshSpec {
+	url: string;
+	componentsUrl: string; // per-vertex int32: connected-component rank (0..N-1), or -1 for unlabeled/stray
+}
+
+export type MeshSpec = FlatMeshSpec | CorrespondenceMeshSpec | SelfColoredMeshSpec | IndexedComponentMeshSpec;
+
+interface Props {
+	meshes: MeshSpec[];
+	/** Alternate mesh set, swapped in when the page's mesh-view toggle (see
+	 * MeshViewToggle.astro) is set to "full". Cells without this prop simply
+	 * ignore the toggle and always show `meshes`. */
+	altMeshes?: MeshSpec[];
+	width?: number | string;
+	height?: number | string;
+	autoRotate?: boolean;
+	label?: string;
+	caption?: string;
+	class?: string;
+}
+
+const { meshes, altMeshes, width = 22, height = 14, autoRotate = true, label, caption, class: className } = Astro.props;
+
+import '../styles/components/mesh_viewer.css';
+---
+
+<figure class:list={['mesh-viewer-wrap', className]} style={`--mv-width: ${width}ch; --mv-height: ${height}lh;`}>
+	<div
+		class="mesh-viewer"
+		data-mesh-viewer
+		data-meshes={JSON.stringify(meshes)}
+		data-alt-meshes={altMeshes ? JSON.stringify(altMeshes) : undefined}
+		data-autorotate={String(autoRotate)}
+		role="img"
+		aria-label={label}
+	></div>
+	{caption && <figcaption class="mesh-viewer-caption">{caption}</figcaption>}
+</figure>
+
+<script>
+	import * as THREE from 'three';
+	import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+	import { parseOFF } from '../lib/off-parser';
+	import { registerViewer, unregisterViewer, type ViewerInstance } from '../lib/mesh-viewer-registry';
+	import type { MeshSpec, CorrespondenceMeshSpec, SelfColoredMeshSpec, IndexedComponentMeshSpec } from './MeshViewer.astro';
+
+	function isCorrespondenceSpec(spec: MeshSpec): spec is CorrespondenceMeshSpec {
+		return 'corresUrl' in spec;
+	}
+
+	function isSelfColoredSpec(spec: MeshSpec): spec is SelfColoredMeshSpec {
+		return 'colorsUrl' in spec;
+	}
+
+	function isIndexedComponentSpec(spec: MeshSpec): spec is IndexedComponentMeshSpec {
+		return 'componentsUrl' in spec;
+	}
+
+	// Fixed palette for connected-component visualization; unlabeled/stray
+	// vertices (component index -1) fall back to a neutral grey.
+	const COMPONENT_PALETTE = ['#e06c75', '#98c379', '#e5c07b', '#61afef', '#c678dd', '#56b6c2'];
+	const COMPONENT_UNLABELED = new THREE.Color('#5c6370');
+
+	// Module-scope caches: several viewers on the same page frequently share
+	// the same mesh/correspondence/template-color file (e.g. every cell in a
+	// results-grid row references the same dataset's template_colors.bin).
+	const geometryCache = new Map<string, Promise<{ positions: Float32Array; indices: Uint32Array }>>();
+	const int32Cache = new Map<string, Promise<Int32Array>>();
+	const rgbCache = new Map<string, Promise<Uint8Array>>();
+
+	function loadOFF(url: string) {
+		if (!geometryCache.has(url)) {
+			geometryCache.set(
+				url,
+				fetch(url)
+					.then((r) => r.text())
+					.then(parseOFF),
+			);
+		}
+		return geometryCache.get(url)!;
+	}
+
+	function loadInt32(url: string) {
+		if (!int32Cache.has(url)) {
+			int32Cache.set(
+				url,
+				fetch(url)
+					.then((r) => r.arrayBuffer())
+					.then((buf) => new Int32Array(buf)),
+			);
+		}
+		return int32Cache.get(url)!;
+	}
+
+	function loadRGB(url: string) {
+		if (!rgbCache.has(url)) {
+			rgbCache.set(
+				url,
+				fetch(url)
+					.then((r) => r.arrayBuffer())
+					.then((buf) => new Uint8Array(buf)),
+			);
+		}
+		return rgbCache.get(url)!;
+	}
+
+	function resolveColor(spec: string): THREE.Color {
+		if (spec.startsWith('--')) {
+			const value = getComputedStyle(document.documentElement).getPropertyValue(spec).trim();
+			return new THREE.Color(value || '#4ec9b0');
+		}
+		return new THREE.Color(spec);
+	}
+
+	async function buildMesh(spec: MeshSpec): Promise<THREE.Mesh> {
+		const { positions, indices } = await loadOFF(spec.url);
+		const geometry = new THREE.BufferGeometry();
+		geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+		geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+
+		let material: THREE.Material;
+		if (isCorrespondenceSpec(spec)) {
+			const [corres, templateColors] = await Promise.all([
+				loadInt32(spec.corresUrl),
+				loadRGB(spec.templateColorsUrl),
+			]);
+			const numVerts = positions.length / 3;
+			const colors = new Float32Array(numVerts * 3);
+			for (let v = 0; v < numVerts; v++) {
+				const templateIdx = corres[v];
+				colors[v * 3] = templateColors[templateIdx * 3] / 255;
+				colors[v * 3 + 1] = templateColors[templateIdx * 3 + 1] / 255;
+				colors[v * 3 + 2] = templateColors[templateIdx * 3 + 2] / 255;
+			}
+			geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+			material = new THREE.MeshStandardMaterial({
+				vertexColors: true,
+				roughness: 0.7,
+				metalness: 0.05,
+				side: THREE.DoubleSide,
+			});
+		} else if (isSelfColoredSpec(spec)) {
+			const ownColors = await loadRGB(spec.colorsUrl);
+			const numVerts = positions.length / 3;
+			const colors = new Float32Array(numVerts * 3);
+			for (let v = 0; v < numVerts * 3; v++) colors[v] = ownColors[v] / 255;
+			geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+			material = new THREE.MeshStandardMaterial({
+				vertexColors: true,
+				roughness: 0.7,
+				metalness: 0.05,
+				side: THREE.DoubleSide,
+			});
+		} else if (isIndexedComponentSpec(spec)) {
+			const componentIdx = await loadInt32(spec.componentsUrl);
+			const numVerts = positions.length / 3;
+			const colors = new Float32Array(numVerts * 3);
+			const palette = COMPONENT_PALETTE.map((c) => new THREE.Color(c));
+			for (let v = 0; v < numVerts; v++) {
+				const idx = componentIdx[v];
+				const c = idx >= 0 ? palette[idx % palette.length] : COMPONENT_UNLABELED;
+				colors[v * 3] = c.r;
+				colors[v * 3 + 1] = c.g;
+				colors[v * 3 + 2] = c.b;
+			}
+			geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+			material = new THREE.MeshStandardMaterial({
+				vertexColors: true,
+				roughness: 0.7,
+				metalness: 0.05,
+				side: THREE.DoubleSide,
+			});
+		} else {
+			material = new THREE.MeshStandardMaterial({
+				color: resolveColor(spec.color),
+				roughness: 0.7,
+				metalness: 0.05,
+				side: THREE.DoubleSide,
+			});
+		}
+
+		geometry.computeVertexNormals();
+		return new THREE.Mesh(geometry, material);
+	}
+
+	function frameGroup(group: THREE.Group, camera: THREE.PerspectiveCamera, controls: OrbitControls) {
+		const box = new THREE.Box3().setFromObject(group);
+		const center = box.getCenter(new THREE.Vector3());
+		group.position.sub(center);
+
+		// Fit to the actual bounding-box extents rather than a bounding
+		// sphere. OrbitControls only ever rotates the camera azimuthally
+		// around the vertical (Y) axis (both drag and autoRotate), so:
+		// - the vertical extent the camera ever sees is exactly size.y,
+		//   never larger, regardless of rotation;
+		// - the horizontal extent is bounded by the circle that
+		//   circumscribes the box's XZ footprint (its "turntable radius"),
+		//   which is tighter than the full 3D bounding sphere because it
+		//   doesn't also fold in the (irrelevant, for horizontal framing)
+		//   vertical extent.
+		// For elongated meshes like standing figures this fills the frame
+		// far more than a sphere-based fit, which wastes most of its radius
+		// on an axis the camera never actually needs.
+		const size = box.getSize(new THREE.Vector3());
+		const verticalHalfExtent = Math.max(size.y / 2, 1e-3);
+		const horizontalRadius = Math.max(Math.hypot(size.x / 2, size.z / 2), 1e-3);
+
+		const vFov = (Math.PI / 180) * camera.fov;
+		const hFov = 2 * Math.atan(Math.tan(vFov / 2) * camera.aspect);
+		const distance = Math.max(verticalHalfExtent / Math.sin(vFov / 2), horizontalRadius / Math.sin(hFov / 2));
+		// Small margin over the tight fit (just enough that the mesh doesn't
+		// touch the edges while auto-rotating or being dragged).
+		camera.position.set(0, 0, distance * 1.03);
+		camera.near = distance / 100;
+		camera.far = distance * 100;
+		camera.updateProjectionMatrix();
+		controls.target.set(0, 0, 0);
+		controls.update();
+	}
+
+	// How long to keep re-rendering after the user releases a drag, so
+	// OrbitControls' damping has time to visibly settle.
+	const DAMPING_SETTLE_MS = 1000;
+
+	interface ModeAwareViewerInstance extends ViewerInstance {
+		setMeshes(specs: MeshSpec[]): void;
+	}
+
+	function createViewerInstance(
+		container: HTMLElement,
+		initialSpecs: MeshSpec[],
+		autoRotate: boolean,
+	): ModeAwareViewerInstance {
+		const scene = new THREE.Scene();
+		const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
+		// antialias off + a capped pixel ratio: these viewers render at
+		// thumbnail size (a few hundred px), and up to ~20 can be live on one
+		// page at once, so per-instance GPU cost matters far more than
+		// per-instance visual polish.
+		const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false });
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+
+		scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+		const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+		dirLight.position.set(20, 30, 40);
+		scene.add(dirLight);
+		const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+		fillLight.position.set(-20, -10, -30);
+		scene.add(fillLight);
+
+		const group = new THREE.Group();
+		scene.add(group);
+
+		const controls = new OrbitControls(camera, renderer.domElement);
+		controls.enableDamping = true;
+		controls.autoRotate = autoRotate;
+		controls.autoRotateSpeed = 1.2;
+
+		let autoRotateRafId = 0;
+		let interactionRafId = 0;
+		let settleTimeoutId = 0;
+		let running = false; // mounted AND currently visible
+		let resizeObserver: ResizeObserver | null = null;
+		let disposed = false;
+		let meshesReady = false;
+
+		const renderFrame = () => {
+			controls.update();
+			renderer.render(scene, camera);
+		};
+
+		// Static (non-autoRotate) viewers are the overwhelming majority on
+		// this page (17 of 18 in the results grid alone) — rendering them
+		// continuously forever, whether or not anyone is looking, is what
+		// actually causes the page to lag. Instead: render once whenever
+		// something changes (mount, resize, mesh finishes loading), then
+		// only resume a per-frame loop while the user is actively dragging
+		// (plus a short damping-settle tail after release).
+		const autoRotateLoop = () => {
+			if (!running) return;
+			renderFrame();
+			autoRotateRafId = requestAnimationFrame(autoRotateLoop);
+		};
+
+		const interactionLoop = () => {
+			if (!running) return;
+			renderFrame();
+			interactionRafId = requestAnimationFrame(interactionLoop);
+		};
+
+		const startInteractionLoop = () => {
+			clearTimeout(settleTimeoutId);
+			if (!interactionRafId) interactionRafId = requestAnimationFrame(interactionLoop);
+		};
+
+		const stopInteractionLoopSoon = () => {
+			clearTimeout(settleTimeoutId);
+			settleTimeoutId = window.setTimeout(() => {
+				cancelAnimationFrame(interactionRafId);
+				interactionRafId = 0;
+			}, DAMPING_SETTLE_MS);
+		};
+
+		controls.addEventListener('start', startInteractionLoop);
+		controls.addEventListener('end', stopInteractionLoopSoon);
+
+		// Re-fit the camera on every resize, not just aspect/pixel size: the
+		// container's aspect ratio itself changes as the page reflows (e.g.
+		// grid columns narrowing), and a distance computed for the old aspect
+		// can leave the mesh under- or over-zoomed for the new one.
+		const resize = () => {
+			const w = Math.max(1, container.clientWidth);
+			const h = Math.max(1, container.clientHeight);
+			camera.aspect = w / h;
+			camera.updateProjectionMatrix();
+			renderer.setSize(w, h);
+			if (meshesReady) frameGroup(group, camera, controls);
+			if (running) renderFrame();
+		};
+
+		let loadToken = 0;
+
+		const setMeshes = (specs: MeshSpec[]) => {
+			const token = ++loadToken;
+			Promise.all(specs.map(buildMesh))
+				.then((loadedMeshes) => {
+					// Bail if disposed, or if a newer setMeshes() call landed
+					// while this one was still fetching (fast toggle clicks).
+					if (disposed || token !== loadToken) return;
+					group.traverse((obj) => {
+						if (obj instanceof THREE.Mesh) {
+							obj.geometry.dispose();
+							const mat = obj.material;
+							if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+							else mat.dispose();
+						}
+					});
+					group.clear();
+					loadedMeshes.forEach((mesh) => group.add(mesh));
+					meshesReady = true;
+					frameGroup(group, camera, controls);
+					if (running) renderFrame();
+				})
+				.catch((err) => console.error('MeshViewer: failed to load mesh(es)', specs, err));
+		};
+
+		setMeshes(initialSpecs);
+
+		return {
+			setMeshes,
+			mount() {
+				container.appendChild(renderer.domElement);
+				running = true;
+				resize();
+				resizeObserver = new ResizeObserver(resize);
+				resizeObserver.observe(container);
+				renderFrame();
+				if (autoRotate) autoRotateRafId = requestAnimationFrame(autoRotateLoop);
+			},
+			pause() {
+				running = false;
+				cancelAnimationFrame(autoRotateRafId);
+				cancelAnimationFrame(interactionRafId);
+				clearTimeout(settleTimeoutId);
+				autoRotateRafId = 0;
+				interactionRafId = 0;
+			},
+			resume() {
+				if (running) return;
+				running = true;
+				renderFrame();
+				if (autoRotate) autoRotateRafId = requestAnimationFrame(autoRotateLoop);
+			},
+			dispose() {
+				disposed = true;
+				running = false;
+				cancelAnimationFrame(autoRotateRafId);
+				cancelAnimationFrame(interactionRafId);
+				clearTimeout(settleTimeoutId);
+				controls.removeEventListener('start', startInteractionLoop);
+				controls.removeEventListener('end', stopInteractionLoopSoon);
+				resizeObserver?.disconnect();
+				controls.dispose();
+				group.traverse((obj) => {
+					if (obj instanceof THREE.Mesh) {
+						obj.geometry.dispose();
+						const mat = obj.material;
+						if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+						else mat.dispose();
+					}
+				});
+				renderer.dispose();
+				renderer.domElement.remove();
+			},
+		};
+	}
+
+	// Tracks live instances that have an alternate mesh set, so the toggle
+	// handler can push a mode change into whichever ones are already
+	// created (lazily-created ones just read the page's current mode at
+	// creation time instead — see mountAll below).
+	const toggleableInstances = new Map<HTMLElement, { instance: ModeAwareViewerInstance; specs: MeshSpec[]; altSpecs: MeshSpec[] }>();
+
+	function currentMeshViewMode(): 'default' | 'full' {
+		return document.documentElement.dataset.meshView === 'full' ? 'full' : 'default';
+	}
+
+	function mountAll() {
+		document.querySelectorAll<HTMLElement>('[data-mesh-viewer]').forEach((container) => {
+			if (container.dataset.mvRegistered === 'true') return;
+			container.dataset.mvRegistered = 'true';
+			const specs: MeshSpec[] = JSON.parse(container.dataset.meshes || '[]');
+			const altSpecsRaw = container.dataset.altMeshes;
+			const altSpecs: MeshSpec[] | undefined = altSpecsRaw ? JSON.parse(altSpecsRaw) : undefined;
+			const autoRotate = container.dataset.autorotate !== 'false';
+			const initialSpecs = altSpecs && currentMeshViewMode() === 'full' ? altSpecs : specs;
+			registerViewer(container, () => {
+				const instance = createViewerInstance(container, initialSpecs, autoRotate);
+				if (altSpecs) toggleableInstances.set(container, { instance, specs, altSpecs });
+				return instance;
+			});
+		});
+	}
+
+	function teardownAll() {
+		document.querySelectorAll<HTMLElement>('[data-mesh-viewer]').forEach((container) => {
+			unregisterViewer(container);
+			delete container.dataset.mvRegistered;
+		});
+		toggleableInstances.clear();
+	}
+
+	function applyMeshViewMode(mode: 'default' | 'full') {
+		document.documentElement.dataset.meshView = mode;
+		toggleableInstances.forEach(({ instance, specs, altSpecs }) => {
+			instance.setMeshes(mode === 'full' ? altSpecs : specs);
+		});
+	}
+
+	document.addEventListener('meshview:toggle', (event) => {
+		const mode = (event as CustomEvent<{ mode?: string }>).detail?.mode;
+		if (mode === 'default' || mode === 'full') applyMeshViewMode(mode);
+	});
+
+	mountAll();
+	document.addEventListener('astro:page-load', mountAll);
+	document.addEventListener('astro:before-swap', teardownAll);
+</script>

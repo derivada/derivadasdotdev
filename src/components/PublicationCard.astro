@@ -1,0 +1,22 @@
+---
+interface Props {
+	venue: string;
+	badgeVariant: string;
+	badgeTone?: string;
+	title: string;
+	authors: string;
+	linkHref: string;
+}
+
+const { venue, badgeVariant, badgeTone, title, authors, linkHref } = Astro.props;
+---
+
+<li class="pub-card">
+	<div class="pub-top">
+		<a class="pub-badge-link" href={linkHref} target="_blank" aria-label={`Open publication venue: ${venue}`}>
+			<span is-="badge" variant-={badgeVariant} class:list={['pub-badge', badgeTone]}>{venue}</span>
+		</a>
+	</div>
+	<h6 class="pub-title muted">{title}</h6>
+	<p class="pub-authors">{authors}</p>
+</li>

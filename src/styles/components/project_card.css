@@ -1,0 +1,180 @@
+	@import '@webtui/css/components/button.css';
+	@import '@webtui/css/utils/box.css';
+	.project {
+		display: flex;
+		flex-direction: row;
+		gap: 2ch;
+		margin-bottom: 1lh;
+	}
+	.project-photo-placeholder {
+		border: 1px dashed var(--border);
+		background: var(--panel);
+		padding: 1lh 1ch;
+		margin: 0;
+	}
+
+
+	.project-photo {
+		height: 10lh; 
+		width: 20ch; 
+		object-fit: cover; 
+	}
+
+	.project-main {
+		display: flex;
+		flex: 1;
+		gap: 1lh;
+		justify-content: space-between;
+		flex-direction: column;
+		min-width: 0;
+	}
+
+	.project-header {
+		align-items: flex-start;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		gap: 1ch;
+	}
+
+	.project-header-left {
+		min-width: 0;
+	}
+
+	.project-title {
+		flex: 1 1 70%;
+		min-width: 0;
+	}
+
+	.project-tags {
+		display: flex;
+		flex-direction: row;
+		row-gap: 1lh;
+		column-gap: 2ch;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		flex: 0 1 50%;
+	}
+
+	.project-button-panel {
+		margin-top: auto;
+		display: flex;
+		flex-direction: row;
+		gap: 0ch;
+		/*margin-top: 0.67ch; TODO: fix alignment with grid of these buttons */
+	}
+
+	.project-desc {
+		min-width: 0;
+	}
+
+	.project-desc > :first-child {
+		margin-top: 0;
+	}
+
+	.project-desc > :last-child {
+		margin-bottom: 0;
+	}
+
+	.project-desc p,
+	.project-desc ul,
+	.project-desc ol,
+	.project-desc pre,
+	.project-desc blockquote,
+	.project-desc table {
+		margin: 0 0 1lh;
+	}
+
+	/* WebTUI's own table component draws its row/column dividers as
+	   absolutely-positioned pseudo-elements spaced off of padding-bottom/
+	   padding-right on each cell -- but that padding is silently zeroed by
+	   an unlayered `* { padding: 0 }` reset shipped in the same package (a
+	   layer-merging quirk that only reproduces in production builds, not
+	   dev), which collapses every row until its divider line is drawn
+	   straight through the text above it. Rather than re-patch that
+	   fragile padding dependency again, disable WebTUI's table dividers
+	   for these tables entirely and draw ordinary, dependable
+	   border-bottom rules instead. */
+	.project-desc table th:before,
+	.project-desc table th:after,
+	.project-desc table td:before,
+	.project-desc table td:after {
+		content: none;
+	}
+
+	.project-desc table {
+		border-collapse: collapse;
+	}
+
+	.project-desc table th,
+	.project-desc table td {
+		padding: 0.4lh 1.5ch 0.4lh 0;
+		text-align: left;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.project-desc table tr:last-child th,
+	.project-desc table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.project-desc table th:last-of-type,
+	.project-desc table td:last-of-type {
+		padding-right: 0;
+	}
+
+	.project-desc img {
+		display: block;
+		height: auto;
+		max-width: 100%;
+		min-width: 0;
+	}
+
+	.project-button {
+		height: 3lh;
+		gap: 0ch;
+	}
+
+	.demo-button {
+		--button-primary: var(--normal-red);
+		font-weight: 700;
+	}
+	.demo-button:active {
+		--button-primary: var(--normal-red) !important;
+		font-weight: 700;
+	}
+
+	@media (max-width: 768px) {
+		.project {
+			flex-direction: column; 
+		}
+
+		.photo-placeholder-inner {
+			width: 100%; 
+			height: 12lh;
+		}
+
+		.project-photo {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		.project-header {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 1lh;
+		}
+
+		.project-button-panel {
+			margin-top: 2lh;
+		}
+
+		.project-desc img,
+		.project-desc .project-photo-placeholder {
+			float: none !important;
+			width: 100% !important;
+			height: auto !important;
+			margin-inline: 0 !important;
+		}
+}

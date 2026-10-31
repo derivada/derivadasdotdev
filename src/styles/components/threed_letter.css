@@ -1,0 +1,13 @@
+.ddx-canvas-container {
+    block-size: var(--ddx-block-size, 4lh);
+    inline-size: var(--ddx-width, var(--ddx-block-size, 4ch));
+}
+
+.ddx-canvas-container:active {
+    cursor: grabbing;
+}
+
+.ddx-canvas-container canvas {
+    display: block;
+    outline: none;
+}

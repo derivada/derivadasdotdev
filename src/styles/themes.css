@@ -1,0 +1,109 @@
+:root,
+[data-theme='default'] {
+	--bg: #1f1f1f;
+	--panel: #242424;
+	--text: #cccccc;
+	--muted: #9f9f9f;
+	--accent: #4ec9b0;
+	--border: #666666;
+
+	--normal-black: #111111;
+	--normal-red: #d6181b;
+	--normal-green: #6a9955;
+	--normal-yellow: #e4d201;
+	--normal-blue: #569cd6;
+	--normal-magenta: #bc3fbc;
+	--normal-cyan: #4ec9b0;
+	--normal-white: #dddddd;
+
+	--bright-black: #666666;
+	--bright-red: #ce9178;
+	--bright-green: #b5cea8;
+	--bright-yellow: #dcdcaa;
+	--bright-blue: #9cdcfe;
+	--bright-magenta: #d670d6;
+	--bright-cyan: #9cdcfe;
+	--bright-white: #e5e5e5;
+}
+
+[data-theme='catppuccin_mocha'] {
+	--bg: #1e1e2e;
+	--panel: #313244;
+	--text: #cdd6f4;
+	--muted: #a6adc8;
+	--accent: #94e2d5;
+	--border: #585b70;
+
+	--normal-black: #45475a;
+	--normal-red: #f38ba8;
+	--normal-green: #a6e3a1;
+	--normal-yellow: #f9e2af;
+	--normal-blue: #89b4fa;
+	--normal-magenta: #f5c2e7;
+	--normal-cyan: #94e2d5;
+	--normal-white: #bac2de;
+
+	--bright-black: #585b70;
+	--bright-red: #f38ba8;
+	--bright-green: #a6e3a1;
+	--bright-yellow: #f9e2af;
+	--bright-blue: #89b4fa;
+	--bright-magenta: #f5c2e7;
+	--bright-cyan: #94e2d5;
+	--bright-white: #a6adc8;
+}
+
+[data-theme='solarized_light'] {
+	--bg: #fdf6e3;
+	--panel: #eee8d5;
+	--text: #586e75;
+	--muted: #657b83;
+	--accent: #268bd2;
+	--border: #93a1a1;
+
+	--normal-black: #073642;
+	--normal-red: #dc322f;
+	--normal-green: #859900;
+	--normal-yellow: #b58900;
+	--normal-blue: #268bd2;
+	--normal-magenta: #d33682;
+	--normal-cyan: #2aa198;
+	--normal-white: #eee8d5;
+
+	--bright-black: #002b36;
+	--bright-red: #cb4b16;
+	--bright-green: #586e75;
+	--bright-yellow: #657b83;
+	--bright-blue: #839496;
+	--bright-magenta: #6c71c4;
+	--bright-cyan: #93a1a1;
+	--bright-white: #fdf6e3;
+}
+
+[data-theme='vscode'] {
+	--bg: #1e1e1e;
+	--panel: #252526;
+	--text: #cccccc;
+	--muted: #9da0a2;
+	--accent: #11a8cd;
+	--border: #666666;
+
+	--normal-black: #000000;
+	--normal-red: #cd3131;
+	--normal-green: #0dbc79;
+	--normal-yellow: #e5e510;
+	--normal-blue: #2472c8;
+	--normal-magenta: #bc3fbc;
+	--normal-cyan: #11a8cd;
+	--normal-white: #e5e5e5;
+
+	--bright-black: #666666;
+	--bright-red: #f14c4c;
+	--bright-green: #23d18b;
+	--bright-yellow: #f5f543;
+	--bright-blue: #3b8eea;
+	--bright-magenta: #d670d6;
+	--bright-cyan: #29b8db;
+	--bright-white: #e5e5e5;
+}
+

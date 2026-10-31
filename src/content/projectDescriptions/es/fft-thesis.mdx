@@ -1,0 +1,27 @@
+---
+id: "fft-thesis"
+---
+
+El tema que escogí para mi TFG de Matemáticas fue la _Transformada de Fourier_, una herramienta matemática que me fascina desde hace años y que quería estudiar a fondo. Este trabajo comienza con una recopilación de resultados importantes sobre espacios $L^p$, en particular $L^1$, donde definimos por primera vez la _Transformada de Fourier_ (FT) continua. Después demostramos el teorema de Plancherel para su extensión a $L^2$ y apuntamos la construcción y propiedades de la FT multidimensional.
+
+<img
+  src="/images/projects/fft-thesis/fft_math_dft.png"
+  alt="Discrete Fourier transform visualization"
+  style="width: 32ch; float: right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+
+En la segunda parte del trabajo, desarrollamos un marco matemático sólido para la _Transformada Discreta de Fourier_ (DFT). Esta DFT puede entenderse como un muestreo de una FT continua, y se define de forma limpia mediante raíces de la unidad y matrices de Fourier. Una vez definida la DFT, podemos introducir algoritmos de _Tranformada Rápida de Fourier_ (FFT) para su cálculo. Primero presentamos el conocido algoritmo _Cooley-Tukey_, tanto en su variante _Decimation-In-Time_ (DIT) como _Decimation-In-Frequency_ (DIF), que aplican la idea de divide y vencerás para reducir la complejidad del cálculo de una DFT de $N$ puntos desde $\mathcal{O}(N^2)$ a $\mathcal{O}(N \log N)$, para $N = 2^d$. Esto permite realizar convoluciones muy rápidas $\mathcal{O}(N\log N)$ en el dominio de la frecuencia mediante el _discrete convolution theorem_. También existen otros algoritmos FFT, como split-radix FFT y Rader o Bluestein FFT para $N$ primo.
+
+<img
+  src="/images/projects/fft-thesis/fft_math_jpeg_quality_comp.png"
+  alt="JPEG quality versus compression example"
+  style="width: 42ch; margin-block: 1lh; float: right;"
+/>
+
+Para cerrar el trabajo, repasamos aplicaciones importantes en _procesamiento de señales_ (filtros low-pass, high-pass y band-pass, análisis espectral de acordes de guitarra) y _compresión de imágenes_ (formato JPEG). El trabajo _obtuvo una nota sobresaliente_ (9.8/10). En conjunto, aprendí muchísimo y disfruté mucho escribiendo esta tesis. Muchas gracias a <a href="https://www.linkedin.com/in/lucialopezsomoza/" target="_blank">Lucía López Somoza</a> por su excelente supervisión!
+
+<img
+  src="/images/projects/fft-thesis/fft_math_guitar_harmonics.png"
+  alt="Guitar harmonics visualized with FFT"
+  style="width: 52ch; margin-block: 1lh;"
+/>

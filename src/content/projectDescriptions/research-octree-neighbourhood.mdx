@@ -1,0 +1,28 @@
+---
+id: "research-octree-neighbourhood"
+---
+
+This is my first research paper, written in collaboration with <a href="https://www.linkedin.com/in/miguelyermo/" target="_blank">Miguel Yermo, Ph.D.</a>, <a href="https://www.linkedin.com/in/silviaralcaraz/" target="_blank">Silvia R. Alcaráz, Ph.D.</a>, <a href="https://citius.gal/team/oscar-garcia-lorenzo/" target="_blank">Óscar G. Lorenzo, Ph.D.</a>, <a href="https://citius.gal/team/francisco-fernandez-rivera/" target="_blank">Francisco F. Rivera, Prof.</a> and <a href="https://citius.gal/team/jose-carlos-cabaleiro-dominguez/" target="_blank">José C. Cabaleiro, Prof.</a> and available as a preprint in arXiv. It was developed as a continuation and expansion of my BSc Informatics thesis. The library developed in C++ is also available as open source in GitHub (see link above).
+
+<img
+  src="/images/projects/research-octree-neighbourhood/octree_hilbert_visualization.png"
+  alt="Octree built upon a Hilbert SFC reordered cloud."
+  style="height: 12lh; float:right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+
+### Abstract
+This work presents an efficient approach for neighbourhood searching in 3D point clouds, combining spatial reordering leveraging _Space-Filling Curves_ (SFC), specifically Morton and Hilbert curves, with a _linear Octree_ implementation. We also propose _specialised search algorithms_ for fixed-radius and kNN queries, based on our linear Octree structures. Additionally, we introduce the novel concept of _kNN locality histogram_, which can be easily computed to characterise locality in data accesses, and we found to be directly related to _cache misses and search performance_. Our experiments reveal that SFC reordering significantly improves access to spatial data, _reducing the number of cache misses_ from 25% to 75% and runtime by up to 50%. Moreover, we compare our proposal with several widely used Octree and KDTree implementations. Our method achieves a _significant reduction in search time_, up to 10x faster than existing solutions. Additionally, we analysed the performance of our neighbourhood searches (parallelised using OpenMP), demonstrating _high scalability_ with the number of cores and the problem size. Notably, we observed a _speedup of up to 36x_ when executing fixed-radius searches in a system with 40 cores. The results obtained indicate that our methods provide a _robust and efficient solution_ for applications that require fast access to large-scale 3D point neighbour sets. 
+
+
+<p style="display:flex; flex-direction:horizontal; gap: 3ch;">
+    <img
+    src="/images/projects/research-octree-neighbourhood/octree_knn_locality_bench.png"
+    alt="kNN locality histogram for cloud 5080_54400."
+    style="width: 52ch; margin-inline-start: 2ch; margin-block: 1lh;"
+    />
+    <img
+    src="/images/projects/research-octree-neighbourhood/octree_loglog_plot.png"
+    alt="Log-log plot highlighting improved performance via our algorithms."
+    style="width: 52ch;  margin-inline-start: 2ch; margin-block: 1lh;"
+    />
+</p>

@@ -1,0 +1,28 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import ProjectsExplorer from '../../components/ProjectsExplorer.astro';
+import { getProjectsPageData } from '../../lib/projects';
+
+const descriptionModules = import.meta.glob<{
+	frontmatter: { id: string };
+	Content: unknown;
+}>('../../content/projectDescriptions/es/*.{md,mdx}', { eager: true });
+const descriptionMap = Object.fromEntries(
+	Object.values(descriptionModules).map((md) => [md.frontmatter.id, md.Content]),
+);
+
+const { groupConfig, projectsForRender, defaultProjectId } =
+	getProjectsPageData('es');
+---
+
+<MainLayout title="proyectos | derivadas.dev">
+	<SiteHeader locale="es" activeTab="projects" />
+	<ProjectsExplorer
+		locale="es"
+		groupConfig={groupConfig}
+		projectsForRender={projectsForRender}
+		defaultProjectId={defaultProjectId}
+		descriptionMap={descriptionMap}
+	/>
+</MainLayout>

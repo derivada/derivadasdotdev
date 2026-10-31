@@ -1,0 +1,152 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import PublicationCard from "../components/PublicationCard.astro";
+import { publications } from "../lib/publications";
+---
+
+<MainLayout title="Pablo D. Viñambres | derivadas.dev">
+	<SiteHeader locale="en" activeTab="about" />
+	<section class="panel">
+		<h2 class="panel-title">~/info</h2>
+		<div class="info-layout">
+			<div>
+				<p style="padding-bottom: 1lh;">
+					Hi! I'm a 24 year old student from Spain, currently located at Munich 🇩🇪 and starting my 3rd semester of MSc Informatics at TUM soon.
+					I graduated in 2025 with two BSc, one in Mathematics and another in
+					Computer Engineering, from Universidade de Santiago de Compostela.
+				</p>
+				<p style="padding-bottom: 1lh;">
+					I am mostly interested in the fields of 3D computer vision, geometry
+					processing and spatial AI. Outside of university, I'm also a member
+					of RoboTUM, Germany's largest robotics student club.
+				</p>
+				<p>
+					My main hobbies are playing electric guitar (especially metal &
+					rock), bouldering and calisthenics.
+				</p>
+				<br>
+				<p>
+					Currently, I'm looking for an internship, working student or HiWi position, up to 20h/week. Would love to join a talented team working in a frontier 3D CV/ML, Scene Understanding or Physical AI project. I can work in-person in Munich or remotely. If you think I could be a good fit, don't hesitate to reach out, I'd love to hear about what you're building!
+				</p>
+				<br>
+				<p>
+					<a href="/CV_2026.pdf" target="_blank">Download CV</a>
+				</p>
+			</div>
+			<aside class="photo-placeholder photo-step-1" aria-label="Profile photo placeholder">
+				<div class="photo-placeholder-inner" role="img" aria-label="Photo placeholder">
+					<img class="profile-photo" src="/images/_JSR5753.JPG" alt="Portrait of Pablo" />
+				</div>
+			</aside>
+		</div>
+		
+	</section>
+
+	<section class="panel">
+		<h2 class="panel-title">~/news</h2>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge news-date-badge"
+				><b>20-08-2026</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li>
+					Added 3 <em class="news-group-research">Research</em> projects: <a href="/projects/primimix">Primimix</a>, <a href="/projects/gems">GeMS</a> and <a href="/projects/matching-disconnected">Matching Disconnected Shapes</a> (this last one with interactive 3D visualizations!).
+				</li>
+				<li>
+					Added 2 <em class="news-group-robotics">Robotics</em> projects: <a href="/projects/hestia">Hestia</a> and <a href="/projects/intrinsic-challenge">Intrinsic AI Challenge</a>.
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="panel">
+		<h2 class="panel-title">~/research</h2>
+		<ul class="pub-list">
+			{publications.map((pub) => <PublicationCard {...pub} />)}
+		</ul>
+	</section>
+	<section class="panel">
+		<h2 class="panel-title">~/achievements</h2>
+		<p>...some of the stuff I'm proud of :)</p>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-bright-red"
+				><b>2026</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>Winner</em> of the <em>Extraordinary Award</em> on BSc Informatics (given to the top 2 students from each year; GPA 9.28/10, rank #2 of 100+).</li>
+				<li><em>Winner</em> of the Xunta de Galicia's <em>End-of-Degree Prize</em> for BSc Computer Engineering (awarded to the top 1% of students, 3.500€).</li>
+				<li>
+					<em>Selected</em> as one of 30 students among 3.000+ applicants for Optiver's <em>Career Kickstarter Tech</em>.
+				</li>
+				<li><em>Finished</em> my first paper!</li>
+				<li>
+					<em>Completed</em> first semester at TUM with a 1.0 average, top ~1% of the cohort.
+				</li>
+				<li>
+					<em>Selected</em> for TUM DI-Lab for project <em
+						>Semantic Planar Splatting for 3D Structured
+						Reconstruction</em
+					>, in collaboration with Cambridge University.
+				</li>
+				<li><em>Promoted</em> to Senior member of RoboTUM.</li>
+				<li><em>Became</em> co-lead of RoboTUM's Project Hestia.</li>
+			</ul>
+		</div>
+
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2025</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>Joined</em> RoboTUM students club.</li>
+				<li>
+					<em>Selected</em> as one of the top 20 Informatics students among
+					2.000+ applicants for First Ascent Spain.
+				</li>
+				<li>
+					<em>Graduated</em> from USC and got <em>accepted</em> into TUM
+					MSc Informatics!
+				</li>
+				<li><em>Winner</em> of the 2025 Ada Byron galician regional contest.</li>
+				<li><em>Winner</em> of HackUDC with project sentikelia.</li>
+				<li><em>Winner</em> of the regional phase of UniversityHack Datathon 2024.</li>
+			</ul>
+		</div>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2024</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>5th place</em> on the 2024 Ada Byron national contest.</li>
+				<li><em>Winner</em> of the 2024 Ada Byron galician regional contest.</li>
+			</ul>
+		</div>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2023</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li>
+					<em>Winner</em> of the Emmy Noether Award, with a mathematics
+					video accumulating <em>over 130.000 views</em>.
+				</li>
+			</ul>
+		</div>
+	</section>
+</MainLayout>

@@ -1,0 +1,23 @@
+---
+id: "unihack"
+---
+
+Para esta <a href="https://www.cajamardatalab.com/datathon-cajamar-universityhack-2024/" target="_blank">competición de análisis de datos</a>, mis compañeros <a href="https://www.linkedin.com/in/pablo-landrove-p%C3%A9rez-gorgoroso-9933681bb/" target="_blank">Pablo Landrove Pérez-Gorgoroso</a>, <a href="https://xianacarrera.github.io/" target="_blank">Xiana Carrera</a> y yo desarrollamos una pipeline end-to-end para _predecir el rendimiento de producción en la fabricación de antígenos en biorreactores_. El reto consistía en tomar conjuntos de datos grandes y desestructurados, desde logs generales de lotes hasta lecturas de sensores de alta frecuencia, y transformarlos a un formato unificado para entender qué factores impulsan realmente un cultivo exitoso.
+
+<img
+  src="/images/projects/unihack/unihack_arch.png"
+  alt="Pipeline architecture."
+  style="width: 42ch; float: left; margin-inline-end: 2ch; margin-block: 1lh;"
+/>
+<br/>
+
+Primero limpiamos los datos a través de varias fases de fabricación (pre-inoculación, inoculación y cultivo final) y _seleccionamos las variables más relevantes_ para explicar la producción. Después entrenamos un _modelo de machine learning predictivo_ para estimar los rendimientos y aplicamos herramientas de interpretabilidad para explicar los resultados. Vimos que factores como los _niveles mínimos de glucosa_, cambios en la _turbidez del fluido_ e incluso la _humedad ambiental de la sala de cultivo_ estaban entre los predictores más fuertes del éxito del proceso.
+
+<img
+  src="/images/projects/unihack/unihack_variables.png"
+  alt="Important variables for production yields."
+  style="width: 42ch; float: right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+<br/>
+
+Nuestro equipo consiguió el _primer puesto en la fase local de la USC_ y se clasificó para la fase nacional. A nivel personal, este proyecto me ayudó a profundizar mucho en modelos clásicos de Machine Learning y en workflows de análisis de datos complejos.

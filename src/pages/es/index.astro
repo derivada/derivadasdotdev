@@ -1,0 +1,152 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import PublicationCard from '../../components/PublicationCard.astro';
+import { publications } from '../../lib/publications';
+---
+
+<MainLayout title="Pablo D. Viñambres | derivadas.dev">
+	<SiteHeader locale="es" activeTab="about" />
+	<section class="panel">
+		<h2 class="panel-title">~/info</h2>
+		<div class="info-layout">
+			<div>
+				<p style="padding-bottom: 1lh;">
+					¡Hola! Soy un estudiante de 24 años de España, estudiando ahora en Múnich 🇩🇪.
+					En 2025, me gradué del Doble Grado en Ingeniería Informática y Matemáticas ofrecido por la Universidade de Santiago de Compostela.
+				</p>
+				<p style="padding-bottom: 1lh;">
+					Me interesan principalmente los campos de visión por computador 3D,
+					geometry processing y spatial AI. Fuera de la universidad, soy
+					miembro de RoboTUM, el club de robótica estudiantil más grande de Alemania.
+				</p>
+				<p>
+					Mis hobbies principales son tocar la guitarra eléctrica (sobre todo metal y rock), el bouldering y la calistenia.
+				</p>
+				<p>
+					Ahora mismo estoy buscando prácticas, un puesto de working student o HiWi, hasta 20h/semana. Me encantaría unirme a un equipo con talento trabajando en un proyecto puntero de 3D CV/ML, Scene Understanding o Physical AI. Puedo trabajar presencialmente en Múnich o en remoto. Si crees que encajo bien, no dudes en contactarme, ¡me encantaría saber en qué estás trabajando!
+				</p>
+				<br>
+				<p>
+					<a href="/CV_2026.pdf" target="_blank">Descargar CV (en inglés)</a>
+				</p>
+			</div>
+			<aside class="photo-placeholder photo-step-1" aria-label="Espacio para foto de perfil">
+				<div class="photo-placeholder-inner" role="img" aria-label="Foto de perfil">
+					<img class="profile-photo" src="/images/_JSR5753.JPG" alt="Retrato de Pablo" />
+				</div>
+			</aside>
+		</div>
+	</section>
+
+	<section class="panel">
+		<h2 class="panel-title">~/noticias</h2>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge news-date-badge"
+				><b>20-08-2026</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li>
+					Añadidos 3 proyectos nuevos de <em class="news-group-research">Investigación</em>: <a href="/es/projects/primimix">Primimix</a>, <a href="/es/projects/gems">GeMS</a> y <a href="/es/projects/matching-disconnected">Matching Disconnected Shapes</a> (¡con visualizaciones 3D!)
+				</li>
+				<li>
+					Añadidos 2 proyectos nuevos de <em class="news-group-robotics">Robótica</em>: <a href="/es/projects/hestia">Hestia</a> y <a href="/es/projects/intrinsic-challenge">Intrinsic AI Challenge</a>.
+				</li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="panel">
+		<h2 class="panel-title">~/investigación</h2>
+		<ul class="pub-list">
+			{publications.map((pub) => <PublicationCard {...pub} />)}
+		</ul>
+	</section>
+
+	<section class="panel">
+		<h2 class="panel-title">~/logros</h2>
+		<p>...algunas de las cosas de las que estoy orgulloso :)</p>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-bright-magenta"
+				><b>2026</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>Ganador</em> del <em>Premio Extraordinario</em> en el Grado de Ingeniería Informática (recibido por los 2 estudiantes con mejores calificaciones del año; nota media 9.28/10, puesto #2 de 100+).</li>
+				<li><em>Ganador</em> del <em>Premio de Fin de Carrera</em> de la Xunta de Galicia en el Grado de Ingeniería Informática (concedido al 1% de mejores estudiantes, 3.500€).</li>
+				<li>
+					<em>Seleccionado</em> como uno de 30 estudiantes entre más de 3.000 candidatos para el <em>Career Kickstarter Tech</em> de Optiver.
+				</li>
+				<li>¡<em>Terminé</em> mi primer paper!</li>
+				<li>
+					<em>Completé</em> mi primer semestre en TUM con una media de 1.0, top ~1% de la clase.
+				</li>
+				<li>
+					<em>Seleccionado</em> para TUM DI-Lab en el proyecto <em
+						>Semantic Planar Splatting for 3D Structured Reconstruction</em
+					>, en colaboración con Cambridge University.
+				</li>
+				<li><em>Ascendido</em> a Senior member de RoboTUM.</li>
+				<li><em>Nombrado</em> co-lead del Project Hestia en RoboTUM.</li>
+			</ul>
+		</div>
+
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2025</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>Me uní</em> al club de estudiantes RoboTUM.</li>
+				<li>
+					<em>Seleccionado</em> como uno de los 20 mejores estudiantes de
+					Informática entre más de 2.000 candidatos para First Ascent Spain.
+				</li>
+				<li>
+					¡<em>Me gradué</em> en la USC y fui <em>admitido</em> en el MSc
+					Informatics de TUM!
+				</li>
+				<li>
+					<em>Ganador</em> del certamen gallego regional Ada Byron.
+				</li>
+				<li><em>Ganador</em> de HackUDC con el proyecto sentikelia.</li>
+				<li><em>Ganador</em> de la fase regional del UniversityHack Datathon 2024.</li>
+			</ul>
+		</div>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2024</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li><em>5º puesto</em> en el certamen nacional Ada Byron.</li>
+				<li>
+					<em>Ganador</em> del certamen gallego regional Ada Byron.
+				</li>
+			</ul>
+		</div>
+		<div class="achievement-year-group">
+			<span
+				is-="badge"
+				cap-="squared round"
+				class="achievement-year-badge badge-normal-white"
+				><b>2023</b></span
+			>
+			<ul marker-="open tree" class="achievement-list">
+				<li>
+					<em>Ganador</em> del Emmy Noether Award, con un vídeo de matemáticas que
+					acumula <em>más de 130.000 visualizaciones</em>.
+				</li>
+			</ul>
+		</div>
+	</section>
+</MainLayout>

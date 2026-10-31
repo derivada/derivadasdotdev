@@ -1,0 +1,200 @@
+---
+export type Badge = {
+    label: string;
+    badgeColor?: string;
+    badgeText?: string;
+};
+
+type ButtonConfig = {
+    show: boolean;
+    href: string;
+    label?: string;
+};
+
+interface Props {
+    title: string;
+    description?: string;
+    locale?: "en" | "es";
+    badges?: Badge[];
+    buttons?: {
+        demo?: ButtonConfig;
+        paper?: ButtonConfig;
+        blog?: ButtonConfig;
+        code?: ButtonConfig;
+        video?: ButtonConfig;
+    };
+    demoBadgeColor?: string;
+}
+
+const {
+    title,
+    description,
+    locale = "en",
+    badges = [],
+    buttons = {},
+    demoBadgeColor,
+} = Astro.props;
+
+const defaultButtonLabels = {
+    en: {
+        demo: "LIVE DEMO",
+        paper: "PAPER",
+        blog: "BLOG",
+        code: "CODE",
+        video: "VIDEO",
+    },
+    es: {
+        demo: "DEMO",
+        paper: "PAPER",
+        blog: "BLOG",
+        code: "CÓDIGO",
+        video: "VIDEO",
+    },
+} as const;
+
+const buttonDefs = [
+    { key: "demo", variant: undefined },
+    { key: "paper", variant: "background1" },
+    { key: "blog", variant: "background2" },
+    { key: "code", variant: "foreground2" },
+    { key: "video", variant: "foreground1" },
+] as const;
+
+const demoStyle = demoBadgeColor
+    ? `--badge-color: ${demoBadgeColor};`
+    : undefined;
+
+import "../styles/components/project_card.css";
+---
+
+<section class="panel project">
+    <div class="project-main">
+        <div>
+            <div class="project-header">
+                <div class="project-header-left">
+                    <h1 class="project-title">{title}</h1>
+                    <div class="project-button-panel">
+                        {
+                            buttonDefs.map((buttonDef) => {
+                                const config = buttons[buttonDef.key];
+                                if (!config?.show || !config.href) {
+                                    return null;
+                                }
+
+                                const isDemoButton = buttonDef.key === "demo";
+
+                                return (
+                                    <button
+                                        type="button"
+                                        is-="button"
+                                        class:list={[
+                                            "project-button",
+                                            isDemoButton && "demo-button",
+                                        ]}
+                                        data-href={config.href}
+                                        variant-={buttonDef.variant}
+                                        style={
+                                            isDemoButton ? demoStyle : undefined
+                                        }
+                                    >
+                                        {config.label || defaultButtonLabels[locale][buttonDef.key]}
+                                    </button>
+                                );
+                            })
+                        }
+                    </div>
+                </div>
+                {
+                    badges.length > 0 && (
+                        <p class="project-tags">
+                            {badges.map((badge) => {
+                                const badgeStyle = [
+                                    badge.badgeColor
+                                        ? `--badge-color: ${badge.badgeColor};`
+                                        : "--badge-color: var(--normal-black);",
+                                    badge.badgeText
+                                        ? `--badge-text: ${badge.badgeText};`
+                                        : "",
+                                ]
+                                    .filter(Boolean)
+                                    .join(" ");
+
+                                return (
+                                    <span
+                                        is-="badge"
+                                        style={badgeStyle || undefined}
+                                    >
+                                        {badge.label}
+                                    </span>
+                                );
+                            })}
+                        </p>
+                    )
+                }
+            </div>
+
+            <br />
+            <div class="project-desc">
+                <slot>
+                    {description && <p>{description}</p>}
+                </slot>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    const wiredPanels = new WeakSet();
+
+    const handleProjectButtonClick = (event: MouseEvent) => {
+        const target = event.target;
+        if (!(target instanceof Element)) {
+            return;
+        }
+
+        const button = target.closest(".project-button[data-href]");
+        if (!(button instanceof HTMLElement)) {
+            return;
+        }
+
+        const href = button.dataset.href;
+        if (!href) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const isExternal = /^(https?:)?\/\//.test(href);
+        if (isExternal) {
+            window.open(href, "_blank", "noopener,noreferrer");
+            return;
+        }
+
+        window.location.assign(href);
+    };
+
+    const wireProjectButtons = () => {
+        const panels = document.querySelectorAll(".project-button-panel");
+
+        panels.forEach((panel) => {
+            if (!(panel instanceof HTMLElement) || wiredPanels.has(panel)) {
+                return;
+            }
+
+            wiredPanels.add(panel);
+            panel.addEventListener("click", handleProjectButtonClick);
+        });
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", wireProjectButtons, {
+            once: true,
+        });
+    } else {
+        wireProjectButtons();
+    }
+
+    // Re-bind after Astro client-side navigation
+    document.addEventListener('astro:page-load', wireProjectButtons);
+    document.addEventListener('astro:after-swap', wireProjectButtons);
+</script>

@@ -1,0 +1,27 @@
+---
+id: "gems"
+---
+
+_GeMS_ (Geometry-aware Mesh Splatting) was our final project for the Machine Learning for 3D Geometry (ML3D) course taught by Prof. Angela Dai at TUM, done together with <a href="https://www.linkedin.com/in/shaojiehuchen/" target="_blank">Shao Jie Hu-Chen</a>. We build on a CVPR 2026 paper, _MeshSplatting_, which replaces the Gaussian primitives found in standard 3D Gaussian Splatting with an explicit, opaque triangle soup representation, which is later triangulated into a mesh. While the approach is interesting and yields decent photometric quality, it usually produces noisy and broken geometry on simple planar regions such as walls and floors. GeMS attempts to reduce these effects, caused by the underconstrained photometric objective, by adding three regularization terms $\mathcal{L}_{\text{lap}}, \mathcal{L}_{\text{planar}}, \mathcal{L}_{\text{shared}}$ on top of the photometric loss during training: a Laplacian smoothness + normal-consistency term that dampens vertex noise and folding, a plane-alignment loss (cosine-alignment with normal + L1 with center) which uses an optimized representation provided by _PlanarSplatting_, and a semantic-boundary loss that discourages triangles from being shared between two different objects.
+
+<img
+  src="/images/projects/gems/gems_pipeline.png"
+  alt="GeMS pipeline overview, from planar detection to the final mesh"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+On Mip-NeRF360 and ScanNet++, GeMS clearly improves geometric quality, with Chamfer-L1, F-score and normal consistency all improving, while keeping photometric quality on par with or better than the baseline. It also decreases the fraction of ambiguous triangles shared between object instances (12.33% down to 10.33% on our ScanNet++ subset). The plane alignment component ($\mathcal{L}_{\text{planar}}$) turned out to be the single strongest component of our method:
+
+| Method                     | PSNR↑     | Chamfer-L1↓ | F-score↑ | Shared Tri.↓ |
+| --------------------------- | --------- | ----------- | -------- | ------------- |
+| MeshSplatting               | 19.63     | 0.110       | 0.540    | 12.33%        |
+| + $\mathcal{L}_{\text{geo}}$    | 19.72     | 0.068       | 0.588    | 11.29%        |
+| + $\mathcal{L}_{\text{planar}}$ | **20.59** | **0.056**   | 0.629    | 12.85%        |
+| + $\mathcal{L}_{\text{shared}}$ | 20.54     | 0.068       | 0.571    | 12.98%        |
+| **GeMS (Ours)**              | 19.995    | 0.062       | **0.630**| **10.33%**    |
+
+<img
+  src="/images/projects/gems/gems_results.png"
+  alt="Qualitative comparison of RGB renders and normal maps across ablations against the baseline and ground truth"
+  style="width: 90ch; margin-block: 1lh;"
+/>

@@ -1,0 +1,20 @@
+---
+id: "intrinsic-challenge"
+---
+
+{/* <div class="project-photo-placeholder" style="height: 22lh; width: 26ch; float: right; margin-inline-start: 2ch; margin-block: 1lh; display: flex; align-items: center; justify-content: center; text-align: center;">
+  <em>Foto placeholder: célula simulada con brazo UR5 de RoboTaNGo para el reto.</em>
+</div> */}
+
+El <a href="https://www.intrinsic.ai/events/ai-for-industry-challenge" target="_blank">AI for Industry Challenge</a> es una competición de robótica organizada por _Intrinsic_ y Open Robotics, centrada en uno de los problemas más complicados de la manufactura de componentes electrónicos: la inserción de cables y conectores. Nuestro equipo _RoboTaNGo_, formado por miembros de <a href="https://www.robotum.info/" target="_blank">RoboTUM</a> e ingenieros de TNG Technology Consulting, participó en la fase de clasificación, dividiéndonos en los subequipos de generación de datos, investigación de policies y despliegue.
+
+Primero tuvimos que desarrollar una política de "cheat code": dado que el simulador de la fase de clasificación expone las posiciones reales (ground truth) de los objetos, escribimos un controlador que lee directamente la posición del cable y del puerto y calcula geométricamente la trayectoria de recogida e inserción, sin ningún tipo de aprendizaje de por medio. Debido a una física ligeramente defectuosa en el entorno de simulación, y teniendo que equilibrar simplicidad y predictibilidad (para facilitar el entrenamiento de modelos VLA) con precisión, tuvimos que reescribir esta política muchas veces. Una vez terminada, se convirtió en nuestra principal herramienta para generar datos de demostración limpios.
+
+{/* <div class="project-photo-placeholder" style="height: 20lh; width: 55ch; margin-block: 1lh; display: flex; align-items: center; justify-content: center; text-align: center;">
+  <em>Diagrama placeholder: pipeline de grabación con LeRobot alimentando episodios del código trampa y de teleoperación al finetuning de GR00T.</em>
+</div> */}
+
+Tras recolectar datos de buena calidad con nuestra política de código trampa, empezamos a hacer finetuning del modelo fundacional (VLA) _Isaac GR00T de NVIDIA_. Para alimentarlo, construimos un _pipeline de grabación basado en LeRobot_ conectado al stack de ROS 2 del reto. Combinamos episodios generados automáticamente por nuestro controlador de cheat code en escenarios aleatorizados, más una configuración de _teleoperación_ que permitía a un miembro del equipo manejar el brazo simulado directamente y grabar el episodio directamente en el formato de dataset de LeRobot. Usamos la teleoperación tanto para demostraciones normales como para episodios de "recuperación". Estos episodios se tratan de ejemplos correctivos grabados tras los propios fallos de la política entrenada. Por último, empaquetamos el modelo ya afinado detrás de una pequeña arquitectura servidor/cliente, de forma que un servidor de inferencia con mucha GPU pudiera ejecutarse por separado del nodo ligero de ROS 2 que enviamos como envío final. Por desgracia, la competición estuvo muy reñida y tuvimos algunos problemas con nuestra política de GR00T que no pudimos resolver a tiempo, así que no conseguimos suficientes puntos para clasificarnos a la siguiente fase.
+
+En retrospectiva, nos habría beneficiado construir primero una baseline más sencilla (por ejemplo, reconstrucción multi-vista junto con una política simple para seguir una pose predicha) antes de apostar de lleno por los VLA. Los modelos de fundación están diseñados para generalizar muy bien, pero nuestra tarea era acotada y localizada, así que puede que no fueran la mejor elección: son más difíciles de entrenar, necesitan más recolección de datos, y son menos estables y menos robustos que los enfoques más clásicos.
+

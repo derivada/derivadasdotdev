@@ -1,0 +1,17 @@
+---
+id: "intrinsic-challenge"
+---
+
+{/* <div class="project-photo-placeholder" style="height: 22lh; width: 26ch; float: right; margin-inline-start: 2ch; margin-block: 1lh; display: flex; align-items: center; justify-content: center; text-align: center;">
+  <em>Photo placeholder: RoboTaNGo's simulated UR5 cell for the challenge.</em>
+</div> */}
+
+The <a href="https://www.intrinsic.ai/events/ai-for-industry-challenge" target="_blank">AI for Industry Challenge</a> is a robotics competition organized by _Intrinsic_ and Open Robotics, targeting one of electronics manufacturing's most tedious bottlenecks: dexterous cable and connector insertion. As _RoboTaNGo_ — a joint team of <a href="https://www.robotum.info/" target="_blank">RoboTUM</a> members and engineers from TNG Technology Consulting — we entered the qualification phase, splitting into data generation, policy research and deployment workstreams.
+
+First, we had to develop a _"cheat code" policy_: since the qualification simulator exposes ground-truth object poses, we wrote an oracle controller that reads the cable and port positions directly and computes the pick-and-insert trajectory geometrically, without any learning involved. Due to slightly faulty physics in the simulation environment, and having to trade off simplicity and predictability (for easier VLA training) with accuracy, we had to rewrite this policy many times. Once we were done, it became our main tool for generating clean demonstration data.
+
+{/* <div class="project-photo-placeholder" style="height: 20lh; width: 55ch; margin-block: 1lh; display: flex; align-items: center; justify-content: center; text-align: center;">
+  <em>Diagram placeholder: LeRobot recording pipeline feeding cheat-code and teleoperated episodes into GR00T fine-tuning.</em>
+</div> */}
+
+After collecting good quality data with our cheat code policy, we started fine-tuning _NVIDIA's Isaac GR00T_ foundation (VLA) model. To feed it, we built a _LeRobot-based recording pipeline_ wired into the challenge's ROS 2 stack. We combined episodes generated automatically by the cheat code oracle across randomized scenarios, plus a _teleoperation_ setup that let a team member drive the simulated arm directly and record straight into LeRobot's dataset format. We used teleop both for regular demonstrations and for "recovery" episodes, which are corrective examples recorded after the trained policy's own failures. Finally, we packaged the fine-tuned model behind a small server/client split so a GPU-heavy inference server could run separately from the lightweight ROS 2 node we submitted. Sadly, the competition was strong and we ran into some issues with our GR00T policy that we couldn't address in time, so we didn't score enough points to qualify for the next phase. Looking back, we'd have benefited from first building a simpler baseline (e.g. multi-view reconstruction paired with a straightforward policy for tracking a predicted pose) before committing fully to VLAs. Foundation models are built to generalize broadly, but our task was narrow and localized, so they may not have been the best fit: they're harder to train, need more data collection, and are less stable and less robust than more classical approaches.

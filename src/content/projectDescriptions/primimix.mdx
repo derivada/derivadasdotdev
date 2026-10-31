@@ -1,0 +1,36 @@
+---
+id: "primimix"
+---
+
+_Primimix_ is a hybrid scene-decomposition and rendering pipeline developed by <a href="https://www.linkedin.com/in/binyu-fang/" target="_blank">Binyu Fang</a>, <a href="https://www.linkedin.com/in/katy-grossmann-2274a71bb/" target="_blank">Katy Grossmann</a>, <a href="https://www.linkedin.com/in/billy-herrmann-020386268/" target="_blank">Billy Herrmann</a>, <a href="https://www.linkedin.com/in/danit-niwattananan-50b4321a6/" target="_blank">Danit Niwattananan</a> and myself for our <a href="https://www.mdsi.tum.de/en/di-lab/tum-di-lab/" target="_blank"> TUM Data Innovation Lab </a> project, originally titled _Semantic Planar Splatting for 3D Structured Reconstruction_ and supervised by Prof. Dr. Olaf Wysocki from the CV4DT Chair at the University of Cambridge. The research problem we tackle is that 3D Gaussian Splatting renders indoor scenes beautifully, but only as an unstructured cloud of millions of kernels. While there are approaches in the literature that regularize those Gaussians, or represent them with alternative primitives (e.g. 2DGS, MeshSplatting, GaMeS...) there is still not a dominant representation that is photorealistic, geometrically accurate and structured. Our approach combines a dual primitive representation, including planes and superquadrics, that are optimized jointly with 2D Gaussians placed on top of them. This way, the primitives provide a scaffold for both foreground objects (superquadrics) and background planar regions (planes), and the Gaussians equipped with Spherical Harmonics coefficients add texture and geometric detail to the representation.
+
+<img
+  src="/images/projects/primimix/primimix_pipeline.png"
+  alt="Primimix pipeline: MoGe cloud densification, 3D instance segmentation, primitive initialization and Gaussian skinning, two-phase optimization"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+Given posed images alone, we densify a point cloud, segment it into instances, and split them into two primitive sets: bounded planes $\mathcal{P}$ for structural surfaces, and superquadrics $\mathcal{Q}$ for furniture and clutter, together forming $\mathcal{S} = \mathcal{P} \cup \mathcal{Q}$. Superquadrics are an eleven-parameter family spanning cuboids, cylinders and ellipsoids, defined by radii $r_i=(r_i^x, r_i^y, r_i^z)$ and shape exponents $\varepsilon_i=(\varepsilon_i^1, \varepsilon_i^2)$.
+<img
+  src="/images/projects/primimix/primimix_parametrization.png"
+  alt="Geometric parametrization of the planar primitive P_i and the superquadric primitive Q_i"
+  style="width: 62ch; margin-block: 1lh;"
+/>
+
+We then bind 2D Gaussian "skins" to every primitive in $\mathcal{S}$, first optimizing geometry against depth and normals, then freezing it to refine appearance. On a representative ScanNet++ scene, this lets Primimix explain the room with around _620 explicit blocks_ and _1.6M_ surface Gaussians, against the _1.4-2.2M_ fully unstructured Gaussians other splatting baselines need to render the same room with no explicit structure at all:
+
+<img
+  src="/images/projects/primimix/primimix_representation.png"
+  alt="Representation structure: Primimix's primitive decomposition and render side by side with the unstructured 3D Gaussian Splatting point cloud for the same scene"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+On the geometric side, Primimix leads both baselines on Chamfer distance, completeness and F-score on the ScanNet++ dataset:
+
+| Method                  | Chamfer↓  | Accuracy↓ | Completeness↓ | F@5↑      |
+| ----------------------- | --------- | --------- | -------------- | --------- |
+| PlanarSplatting         | 10.99     | 9.58      | 12.41          | 44.70     |
+| 3D Gaussian Flats       | 18.60     | **4.60**  | 32.59          | 50.24     |
+| **Primimix (Ours)**     | **6.63**  | 7.00      | **6.26**       | **62.80** |
+
+The project was awarded a 1.0 at TUM DI-Lab, and we're now refining the method and working towards a publication.

@@ -1,0 +1,22 @@
+---
+id: "unihack"
+---
+
+For this <a href="https://www.cajamardatalab.com/datathon-cajamar-universityhack-2024/" target="_blank">data analysis competition</a>, my teammates <a href="https://www.linkedin.com/in/pablo-landrove-p%C3%A9rez-gorgoroso-9933681bb/" target="_blank"> Pablo Landrove Pérez-Gorgoroso</a> and <a href="https://xianacarrera.github.io/" target="_blank">Xiana Carrera</a> and I developed an end-to-end pipeline for _predicting the final production yield of biomanufacturing bioreactors_. We were tasked with taking large, disjointed datasets, ranging from general batch logs to high-frequency sensor readings, and transforming them into a unified format to understand exactly what drives a successful cultivation process.
+
+<img
+  src="/images/projects/unihack/unihack_arch.png"
+  alt="Pipeline architecture."
+  style="width: 42ch; float: left; margin-inline-end: 2ch; margin-block: 1lh;"
+/>
+<br/>
+
+We first cleaned the data across multiple manufacturing phases (pre-inoculation, inoculation and final cultivation) and _selected the most salient features_ driving the production. After this, we trained a _predictive machine learning model_ to estimate the yields and applied interpretability tools. We found that factors like _minimum glucose levels_, changes in _fluid turbidity_, and even the _ambient humidity in the cultivation room_ were among the strongest predictors of manufacturing success. 
+
+<img
+  src="/images/projects/unihack/unihack_variables.png"
+  alt="Important variables for production yields."
+  style="width: 42ch; float: right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+<br/>
+Our team achieved the _1st place on the USC local phase_ of the competition, qualifying to the national phase. Personally, this project helped me deepen my understanding of classical Machine Learning models and workflows for complex data analysis.

@@ -1,0 +1,27 @@
+---
+id: "gems"
+---
+
+_GeMS_ (Geometry-aware Mesh Splatting) fue nuestro proyecto final para la asignatura de Machine Learning for 3D Geometry (ML3D), impartida por la Prof. Angela Dai en la TUM, junto con <a href="https://www.linkedin.com/in/shaojiehuchen/" target="_blank">Shaojie Hu-Chen</a>. Partimos de un paper de CVPR 2026, _MeshSplatting_, que sustituye las primitivas Gaussianas del 3D Gaussian Splatting estándar por una representación explícita y opaca de triángulos ("triangle soup"), que después se triangula para formar una malla. Aunque el enfoque es interesante y produce una calidad fotométrica decente, suele generar geometría ruidosa y rota en regiones planas simples como paredes y suelos. GeMS intenta reducir estos efectos, causados por el objetivo fotométrico sub-restringido, añadiendo tres términos de regularización $\mathcal{L}_{\text{lap}}, \mathcal{L}_{\text{planar}}, \mathcal{L}_{\text{shared}}$ sobre la pérdida fotométrica durante el entrenamiento: un término de suavidad Laplaciana + consistencia de normales que amortigua el ruido y el plegado entre vértices, una pérdida de alineación con planos (alineación coseno con la normal + L1 con el centro) que usa una representación optimizada proporcionada por _PlanarSplatting_, y una pérdida de fronteras semánticas que penaliza los triángulos compartidos entre dos objetos distintos.
+
+<img
+  src="/images/projects/gems/gems_pipeline.png"
+  alt="Visión general del pipeline de GeMS, desde la detección de planos hasta la malla final"
+  style="width: 90ch; margin-block: 1lh;"
+/>
+
+En Mip-NeRF360 y ScanNet++, GeMS mejora claramente la calidad geométrica, con Chamfer-L1, F-score y consistencia de normales mejorando en conjunto, manteniendo una calidad fotométrica igual o mejor que la del método base. Además, reduce el porcentaje de triángulos ambiguos compartidos entre instancias de objetos (del 12.33% al 10.33% en nuestro subconjunto de ScanNet++). El componente de alineación con planos ($\mathcal{L}_{\text{planar}}$) resultó ser el más determinante de nuestro método:
+
+| Método                      | PSNR↑     | Chamfer-L1↓ | F-score↑ | Tri. compartidos↓ |
+| ----------------------------- | --------- | ----------- | -------- | ------------------- |
+| MeshSplatting                 | 19.63     | 0.110       | 0.540    | 12.33%              |
+| + $\mathcal{L}_{\text{geo}}$      | 19.72     | 0.068       | 0.588    | 11.29%              |
+| + $\mathcal{L}_{\text{planar}}$   | **20.59** | **0.056**   | 0.629    | 12.85%              |
+| + $\mathcal{L}_{\text{shared}}$   | 20.54     | 0.068       | 0.571    | 12.98%              |
+| **GeMS (Ours)**            | 19.995    | 0.062       | **0.630**| **10.33%**          |
+
+<img
+  src="/images/projects/gems/gems_results.png"
+  alt="Comparación cualitativa de renders RGB y mapas de normales entre las distintas ablaciones, el método base y la referencia real"
+  style="width: 90ch; margin-block: 1lh;"
+/>

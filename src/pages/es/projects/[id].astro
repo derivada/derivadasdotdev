@@ -1,0 +1,40 @@
+---
+import MainLayout from '../../../layouts/MainLayout.astro';
+import SiteHeader from '../../../components/SiteHeader.astro';
+import ProjectsExplorer from '../../../components/ProjectsExplorer.astro';
+import { getProjectsPageData } from '../../../lib/projects';
+
+export function getStaticPaths() {
+	const { projectsForRender } = getProjectsPageData('es');
+	const ids = Object.values(projectsForRender)
+		.flat()
+		.map((project) => project.id);
+	return ids.map((id) => ({ params: { id } }));
+}
+
+const { id } = Astro.params;
+
+const descriptionModules = import.meta.glob<{
+	frontmatter: { id: string };
+	Content: unknown;
+}>('../../../content/projectDescriptions/es/*.{md,mdx}', { eager: true });
+const descriptionMap = Object.fromEntries(
+	Object.values(descriptionModules).map((md) => [md.frontmatter.id, md.Content]),
+);
+const { groupConfig, projectsForRender } = getProjectsPageData('es');
+const activeProject = Object.values(projectsForRender)
+	.flat()
+	.find((project) => project.id === id);
+const pageTitle = activeProject ? `${activeProject.title} | derivadas.dev` : 'proyectos | derivadas.dev';
+---
+
+<MainLayout title={pageTitle}>
+	<SiteHeader locale="es" activeTab="projects" />
+	<ProjectsExplorer
+		locale="es"
+		groupConfig={groupConfig}
+		projectsForRender={projectsForRender}
+		defaultProjectId={id}
+		descriptionMap={descriptionMap}
+	/>
+</MainLayout>

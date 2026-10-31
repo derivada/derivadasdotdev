@@ -1,0 +1,27 @@
+---
+id: "fft-thesis"
+---
+
+The topic I chose for my Mathematics BSc thesis was Fourier Transforms, a mathematical tool that has fascinated me for years and that I wanted to explore as deeply as possible. This work starts with a compilation of important results on $L^p$ spaces, particularly $L^1$, where we first define the (continuous) _Fourier Transform_ (FT). We later prove the Plancherel theorem for extension to $L^2$ and hint at multi-dimensional FT construction and properties.
+
+<img
+  src="/images/projects/fft-thesis/fft_math_dft.png"
+  alt="Discrete Fourier transform visualization"
+  style="width: 32ch; float: right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+
+During the second part of the work, we provide a solid mathematical framework for the _Discrete FT_ (DFT). This DFT can be thought of as a sampling of a continuous FT, and can be defined neatly via roots of unity and Fourier matrices. With the DFT defined, we can start talking about _Fast FT_ (FFT) algorithms for its efficient computation. First, we introduce the most common _Cooley-Tukey_ algorithm, both in its _Decimation-In-Time_ (DIT) and _Decimation-In-Frequency_ (DIF) approaches, that use the common algorithmic idea of divide and conquer to reduce the complexity of computing an N-point DFT from $\mathcal{O}(N^2)$ to $\mathcal{O}(N \log N)$, for $N = 2^d$, that allows for very fast $\mathcal{O}(N\log N)$ convolutions on the frequency domain through the _discrete convolution theorem_. Other FFT algorithms exist, such as split-radix FFTs and Rader or Bluestein FFTs for prime $N$.
+
+<img
+  src="/images/projects/fft-thesis/fft_math_jpeg_quality_comp.png"
+  alt="JPEG quality versus compression example"
+  style="width: 42ch; margin-block: 1lh; float: right;"
+/>
+
+To conclude the work, we review important applications on _signal processing_ (low, high and band pass filters, spectral analysis of guitar chords) and _image compression_ (the JPEG format). Overall, I learned a great deal and had a lot of fun writing this thesis. The work _received a very high grade_ (9.8/10). I thank <a href="https://www.linkedin.com/in/lucialopezsomoza/" target="_blank">Lucía López Somoza</a> for her great supervision!
+
+<img
+  src="/images/projects/fft-thesis/fft_math_guitar_harmonics.png"
+  alt="Guitar harmonics visualized with FFT"
+  style="width: 52ch; margin-block: 1lh;"
+/>

@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import { detectLocale } from '../lib/i18n';
+import { ClientRouter } from 'astro:transitions';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = 'Personal portfolio and blog for Pablo Díaz Viñambres :)',
+} = Astro.props;
+const currentLocale = detectLocale(Astro.url.pathname);
+---
+
+<!doctype html>
+<html lang={currentLocale} data-theme="default">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<ClientRouter />
+		<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" /> <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:image" content="/images/_JSR5753.JPG" />
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:image" content="/images/_JSR5753.JPG" />
+
+		<link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+		<title>{title}</title>
+	</head>
+	<body>
+		<div class="main">
+			<slot/>
+		</div>
+		<script is:inline>
+			const key = 'site-theme';
+			const fallbackTheme = 'default';
+			const validThemes = new Set(['catppuccin_mocha', 'alacritty', 'solarized_light', 'vscode']);
+			const legacyThemeMap = {
+				alacritty: 'default',
+			};
+			const themeStateKey = '__derivadasThemeInitialized';
+
+			const normalizeTheme = (theme) => legacyThemeMap[theme] ?? theme;
+
+			const applyTheme = (theme) => {
+				const normalizedTheme = normalizeTheme(theme);
+				const selectedTheme = validThemes.has(normalizedTheme) ? normalizedTheme : fallbackTheme;
+				document.documentElement.setAttribute('data-theme', selectedTheme);
+				localStorage.setItem(key, selectedTheme);
+				const select = document.querySelector('[data-theme-select]');
+				if (select instanceof HTMLSelectElement) {
+					select.value = selectedTheme;
+				}
+			};
+
+			const applyStoredTheme = () => {
+				const preferred = localStorage.getItem(key) || fallbackTheme;
+				applyTheme(preferred);
+			};
+
+			const bindThemeControls = () => {
+				const select = document.querySelector('[data-theme-select]');
+				if (select instanceof HTMLSelectElement && select.dataset.themeBound !== 'true') {
+					select.dataset.themeBound = 'true';
+					select.addEventListener('change', () => applyTheme(select.value));
+				}
+			};
+
+			const initTheme = () => {
+				applyStoredTheme();
+				bindThemeControls();
+			};
+
+			if (!window[themeStateKey]) {
+				window[themeStateKey] = true;
+				window.addEventListener('click', (event) => {
+					const target = event.target;
+					if (target instanceof HTMLElement && target.dataset.theme) {
+						applyTheme(target.dataset.theme);
+					}
+				});
+				document.addEventListener('astro:page-load', initTheme);
+				document.addEventListener('astro:after-swap', initTheme);
+			}
+
+			initTheme();
+		</script>
+	</body>
+</html>

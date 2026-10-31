@@ -1,0 +1,27 @@
+---
+id: "research-octree-neighbourhood"
+---
+
+Este es mi primer artículo de investigación, escrito en colaboración con <a href="https://www.linkedin.com/in/miguelyermo/" target="_blank">Miguel Yermo, Ph.D.</a>, <a href="https://www.linkedin.com/in/silviaralcaraz/" target="_blank">Silvia R. Alcaráz, Ph.D.</a>, <a href="https://citius.gal/team/oscar-garcia-lorenzo/" target="_blank">Óscar G. Lorenzo, Ph.D.</a>, <a href="https://citius.gal/team/francisco-fernandez-rivera/" target="_blank">Francisco F. Rivera, Prof.</a> y <a href="https://citius.gal/team/jose-carlos-cabaleiro-dominguez/" target="_blank">José C. Cabaleiro, Prof.</a>, y disponible como preprint en arXiv. Se desarrolló como una continuación y ampliación de mi TFG en Ingeniería Informática. La librería desarrollada en C++ también está disponible como código abierto en GitHub.
+
+<img
+  src="/images/projects/research-octree-neighbourhood/octree_hilbert_visualization.png"
+  alt="Octree construido sobre una nube reordenada mediante la SFC de Hilbert."
+  style="height: 12lh; float:right; margin-inline-start: 2ch; margin-block: 1lh;"
+/>
+
+### Abstract (traducido del original)
+Este trabajo presenta un enfoque eficiente para la búsqueda de vecindades en nubes de puntos 3D, combinando una reordenación espacial basada en _Space-Filling Curves_ (SFC), concretamente en las curvas de Morton y Hilbert, con una implementación de _octree lineal_. También proponemos _algoritmos de búsqueda especializados_ para consultas de radio fijo y kNN, basados en octrees lineales. Además, introducimos el concepto de _histograma de localidad kNN_, que puede emplearse para caracterizar la localidad en los accesos a datos, y que observamos que está directamente relacionado con los _fallos caché y el rendimiento de las búsquedas_. Nuestros experimentos revelan que la reordenación mediante SFC mejora significativamente el acceso a datos espaciales, _reduciendo el número de fallos caché_ entre un 25% y un 75% y el tiempo de ejecución hasta en un 50%. Asimismo, comparamos nuestra propuesta con varias implementaciones de octree y KDTree ampliamente utilizadas. Nuestro método logra una _reducción significativa del tiempo de búsqueda_, siendo hasta 10 veces más rápido que las soluciones existentes. Además, analizamos el rendimiento de nuestras búsquedas de vecindad (paralelizadas con OpenMP), demostrando _alta escalabilidad_ con el número de núcleos y el tamaño del problema. En particular, observamos un _speedup de hasta 36x_ al ejecutar búsquedas de radio fijo en un sistema con 40 núcleos. Los resultados obtenidos indican que nuestros métodos proporcionan una _solución robusta y eficiente_ para aplicaciones que requieren acceso rápido a conjuntos de vecinos 3D a gran escala.
+
+<p style="display:flex; flex-direction:horizontal; gap: 3ch;">
+    <img
+    src="/images/projects/research-octree-neighbourhood/octree_knn_locality_bench.png"
+    alt="Histograma de localidad kNN en la nube 5080_54400."
+    style="width: 52ch; margin-inline-start: 2ch; margin-block: 1lh;"
+    />
+    <img
+    src="/images/projects/research-octree-neighbourhood/octree_loglog_plot.png"
+    alt="Gráfica log-log mostrando la eficiencia de los algoritmos desarrollados."
+    style="width: 52ch;  margin-inline-start: 2ch; margin-block: 1lh;"
+    />
+</p>

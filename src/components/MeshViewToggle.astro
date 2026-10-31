@@ -1,0 +1,51 @@
+---
+interface Props {
+	labelDefault: string;
+	labelAlt: string;
+}
+
+const { labelDefault, labelAlt } = Astro.props;
+---
+
+<div class="mesh-view-toggle" role="group">
+	<button type="button" is-="button" size-="small" data-mesh-view-btn="default" aria-pressed="true">{labelDefault}</button>
+	<button type="button" is-="button" size-="small" box- data-mesh-view-btn="full" aria-pressed="false">{labelAlt}</button>
+</div>
+
+<script>
+	function initToggle(toggle: HTMLElement) {
+		if (toggle.dataset.bound === 'true') return;
+		toggle.dataset.bound = 'true';
+
+		const buttons = Array.from(toggle.querySelectorAll<HTMLButtonElement>('[data-mesh-view-btn]'));
+		buttons.forEach((btn) => {
+			btn.addEventListener('click', () => {
+				const mode = btn.dataset.meshViewBtn;
+				if (!mode) return;
+				buttons.forEach((b) => {
+					const isActive = b === btn;
+					b.setAttribute('aria-pressed', String(isActive));
+					// WebTUI buttons: box- present = outline (inactive), absent = filled (active).
+					if (isActive) b.removeAttribute('box-');
+					else b.setAttribute('box-', '');
+				});
+				document.dispatchEvent(new CustomEvent('meshview:toggle', { detail: { mode } }));
+			});
+		});
+	}
+
+	function initAll() {
+		document.querySelectorAll<HTMLElement>('.mesh-view-toggle').forEach(initToggle);
+	}
+
+	initAll();
+	document.addEventListener('astro:page-load', initAll);
+</script>
+
+<style>
+	.mesh-view-toggle {
+		display: inline-flex;
+		gap: 1ch;
+		margin-block: 1lh;
+	}
+</style>
