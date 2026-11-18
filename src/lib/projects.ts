@@ -64,6 +64,7 @@ type LocalizedText = {
 
 type ProjectDefinition = {
 	id: string;
+	hidden?: boolean;
 	treeLabel: LocalizedText;
 	title: LocalizedText;
 	badges: ProjectBadge[];
@@ -112,6 +113,7 @@ const projectDefinitions: Record<ProjectGroupKey, ProjectDefinition[]> = {
 	research: [
 		{
 			id: 'primimix',
+			hidden: true,
 			treeLabel: { en: 'Primimix', es: 'Primimix' },
 			title: {
 				en: 'Primimix: Semantic Planar Splatting for 3D Structured Reconstruction',
@@ -148,6 +150,7 @@ const projectDefinitions: Record<ProjectGroupKey, ProjectDefinition[]> = {
 		},
 		{
 			id: 'matching-disconnected',
+			hidden: true,
 			treeLabel: { en: 'Matching Disconnected Shapes', es: 'Matching Disconnected Shapes' },
 			title: {
 				en: 'Matching Disconnected Shapes: 3D Correspondence under Partiality with Disconnection',
@@ -483,7 +486,7 @@ export function getProjectsPageData(locale: Locale): {
 	const projectsByGroup = Object.fromEntries(
 		Object.entries(projectDefinitions).map(([groupKey, projects]) => [
 			groupKey,
-			projects.map((project) => ({
+			projects.filter((project) => !project.hidden).map((project) => ({
 				id: project.id,
 				treeLabel: localize(project.treeLabel, locale),
 				title: localize(project.title, locale),
